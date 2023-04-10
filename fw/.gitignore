@@ -4,3 +4,10 @@
 # esp-idf will generate sdkconfig.TARGETs from sdkconfig.defaults.
 sdkconfig.*
 !sdkconfig.defaults
+
+# Rust
+# dotenv file so cargo remembers env from being invoked through platformio
+.lastcargobuildenv
+
+.embuild
+target/
