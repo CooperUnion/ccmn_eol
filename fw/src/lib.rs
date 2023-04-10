@@ -24,6 +24,7 @@ mod imports {
             include!(concat!(env!("OUT_DIR"), "/opencan_callbacks.rs"));
         }
 
+        #[macro_export]
         macro_rules! canrx {
             ($signal:ident) => {
                 paste::paste! {
@@ -32,8 +33,9 @@ mod imports {
             };
         }
 
-        pub(crate) use canrx;
+        pub use canrx;
 
+        #[macro_export]
         macro_rules! canrx_is_node_ok {
             ($node:ident) => {
                 paste::paste! {
@@ -42,7 +44,7 @@ mod imports {
             };
         }
 
-        pub(crate) use canrx_is_node_ok;
+        pub use canrx_is_node_ok;
     }
 
     pub mod pins {
@@ -54,8 +56,9 @@ use imports::{ember_tasking, opencan, pins};
 
 mod sys;
 pub use sys::*;
+mod util;
 
 mod entry;
 
 mod leds;
-mod util;
+mod state;

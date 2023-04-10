@@ -3,6 +3,7 @@ nodes:
     messages:
     - Status:
         id: 0x40
+        cycletime: 10
         signals:
-
-
+        - counter:
+            width: 8

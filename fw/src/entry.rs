@@ -26,7 +26,7 @@ static ember_task_count: usize = ember_task_list.len();
 #[no_mangle]
 extern "C" fn app_main() {
     panic::set_hook(Box::new(|info| {
-        println!("grr panic! {info}");
+        println!("eol tester panic! {info}");
     }));
 
     unsafe {
