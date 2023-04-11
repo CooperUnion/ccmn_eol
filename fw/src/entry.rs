@@ -14,9 +14,10 @@ extern "C" {
 
 // ember_task_list and ember_task_count
 #[no_mangle]
-static ember_task_list: [&ember_rate_funcs_S; 2] = [
+static ember_task_list: [&ember_rate_funcs_S; 3] = [
     unsafe { &can_rf },
     &crate::leds::RATE_FUNCS,
+    &crate::eeprom::RATE_FUNCS,
 ];
 
 #[no_mangle]

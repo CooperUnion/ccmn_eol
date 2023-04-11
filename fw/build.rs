@@ -59,10 +59,8 @@ fn main() {
             opencan_callbacks,
             [format!("{opencan_generated_dir}/opencan_callbacks.h")]
         ),
-        m!(
-            freelunch,
-            ["src/freelunch.h".into()]
-        )
+        m!(freelunch, ["src/freelunch.h".into()]),
+        m!(libeeprom, ["src/eeprom.h".into()]),
     ];
 
     // Get build flags that platformio is using, else set some defaults.

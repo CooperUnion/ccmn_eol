@@ -3,6 +3,7 @@
 #include <driver/gpio.h>
 #include <driver/i2c.h>
 #include <esp_err.h>
+#include <node_pins.h>
 #include <stdint.h>
 
 // ######        DEFINES        ###### //
