@@ -5,6 +5,9 @@
 sdkconfig.*
 !sdkconfig.defaults
 
+# ESP-IDF Component Manager
+managed_components/
+
 # Rust
 # dotenv file so cargo remembers env from being invoked through platformio
 .lastcargobuildenv
