@@ -12,8 +12,6 @@ fn main() {
 
     let dev = wait_for_esp32(Duration::MAX).unwrap();
 
-    print!("{dev:#?}");
-
     // run esptool to flash firmware
     eprintln!("flashing...");
     let flash = Command::new("esptool.py")
@@ -23,16 +21,17 @@ fn main() {
                 --port {dev}
                 --baud 460800 --before default_reset
                 --after hard_reset write_flash
-                -z --flash_mode dio
+                -z
+                --flash_mode dio
                 --flash_freq 80m
                 --flash_size 8MB 0x0
-                /Users/dmezh/ccmn_eol/build/fw/host/bootloader.bin
+                ../build/fw/host/bootloader.bin
                 0x8000
-                /Users/dmezh/ccmn_eol/build/fw/host/partitions.bin
+                ../build/fw/host/partitions.bin
                 0xd000
-                /Users/dmezh/ccmn_eol/build/fw/host/ota_data_initial.bin
+                ../build/fw/host/ota_data_initial.bin
                 0x10000
-                /Users/dmezh/ccmn_eol/build/fw/host/firmware.bin"
+                ../build/fw/host/firmware.bin"
             }
             .split_ascii_whitespace(),
         )
@@ -45,8 +44,9 @@ fn main() {
 
     if !output.status.success() {
         eprintln!(
-            "Error flashing esp32:\n{}",
-            String::from_utf8_lossy(&output.stdout)
+            "Error flashing esp32:\n  stdout:{}\n  stderr:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
         );
         exit(-2);
     }
