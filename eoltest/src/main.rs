@@ -1,12 +1,11 @@
 use anyhow::{anyhow, Result};
 use indoc::formatdoc;
+use serialport::SerialPortType;
 
 use std::{
     process::{exit, Command},
-    time::{self, Duration, Instant},
+    time::{self, Duration, Instant}, thread::sleep,
 };
-
-use cyme::{lsusb::profiler, system_profiler::USBDevice};
 
 fn main() {
     println!("CCMN EOL Test ----");
@@ -15,17 +14,13 @@ fn main() {
 
     print!("{dev:#?}");
 
-    print!("{}", dev.dev_path());
-
-    exit(0);
-
     // run esptool to flash firmware
     eprintln!("flashing...");
     let flash = Command::new("esptool.py")
         .args(
             formatdoc! {"
                 --chip esp32s3
-                --port /dev/tty.usbmodem2101
+                --port {dev}
                 --baud 460800 --before default_reset
                 --after hard_reset write_flash
                 -z --flash_mode dio
@@ -71,17 +66,21 @@ fn main() {
     // 12. Erase flash
 }
 
-fn wait_for_esp32(time: Duration) -> Result<USBDevice> {
+fn wait_for_esp32(time: Duration) -> Result<String> {
     let start = Instant::now();
 
     while start.elapsed() < time {
-        let spusb = profiler::get_spusb_with_extra(true).unwrap();
+        for dev in serialport::available_ports().unwrap() {
+            let SerialPortType::UsbPort(port) = dev.port_type else {
+                continue;
+            };
 
-        for dev in spusb.flatten_devices() {
-            if dev.name == "USB JTAG/serial debug unit" {
-                return Ok(dev.clone());
+            if port.product.unwrap() == "USB JTAG_serial debug unit" {
+                return Ok(dev.port_name)
             }
         }
+
+        sleep(Duration::from_millis(100));
     }
 
     Err(anyhow!("No ESP32 found."))
