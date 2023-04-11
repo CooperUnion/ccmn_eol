@@ -119,10 +119,10 @@ void freelunch_init(void)
 
     ESP_ERROR_CHECK(tusb_cdc_acm_init(&acm_cfg2));
     const esp_err_t err = esp_tusb_init_console(CONSOLE_ITF);
-    // if (err != ESP_OK) {
-    //     esp_tusb_deinit_console(CONSOLE_ITF);
-    //     fprintf(stderr, "Failed to initialize console on cdc: %s\n", esp_err_to_name(err));
-    // }
+    if (err != ESP_OK) {
+        esp_tusb_deinit_console(CONSOLE_ITF);
+        fprintf(stderr, "Failed to initialize console on cdc: %s\n", esp_err_to_name(err));
+    }
 
     ESP_LOGI(TAG, "USB initialization DONE");
 
