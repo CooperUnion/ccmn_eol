@@ -50,9 +50,13 @@ mod imports {
     pub mod pins {
         include!(concat!(env!("OUT_DIR"), "/node_pins.rs"));
     }
+
+    pub mod freelunch {
+        include!(concat!(env!("OUT_DIR"), "/freelunch.rs"));
+    }
 }
 
-use imports::{ember_tasking, opencan, pins};
+use imports::{ember_tasking, opencan, pins, freelunch};
 
 mod sys;
 pub use sys::*;
