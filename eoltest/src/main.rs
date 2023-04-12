@@ -7,10 +7,14 @@ use tracing_subscriber::FmtSubscriber;
 
 use std::{
     io,
+    ops::Range,
     process::{exit, Command, Output},
     thread::sleep,
-    time::{self, Duration, Instant},
+    time::{Duration, Instant},
 };
+
+mod power;
+mod esp32;
 
 fn main() {
     let subscriber = FmtSubscriber::builder()
@@ -21,58 +25,9 @@ fn main() {
 
     info!("CCMN EOL Test ----");
 
-    info!("Attaching to power supply...");
-    let mut psu = match InstekGpp::new_first_available() {
-        Ok(psu) => psu,
-        Err(e) => {
-            error!("Could not attach to power supply: {e}");
-            exit(-1);
-        }
-    };
-
-    info!("Preparing power supply...");
-    match prepare_psu(&mut psu) {
-        Ok(()) => {
-            sleep(Duration::from_secs(5));
-            info!("Power supply ready.");
-        },
-        Err(e) => {
-            error!("Failed to prepare power supply: {e}");
-            exit(-1);
-        },
-    }
-
-    info!("Waiting for ESP32 JTAG/serial device...");
-
-    let dev = match wait_for_esp32(Duration::from_secs(5)) {
-        Ok(dev) => dev,
-        Err(e) => {
-            error!("Failed to find ESP32: {e}");
-            psu.all_outputs_off().unwrap();
-            exit(-1);
-        },
-    };
-
-    info!("Found esp32 at {dev}");
-    info!("Flashing target {dev} using esptool...");
-    let output = match flash_esp32(&dev) {
-        Ok(o) => o,
-        Err(e) => {
-            error!("Error using esptool: {e}");
-            exit(-1);
-        }
-    };
-
-    if !output.status.success() {
-        error!(
-            "Error flashing esp32:\n  stdout:{}\n  stderr:\n{}",
-            String::from_utf8_lossy(&output.stdout),
-            String::from_utf8_lossy(&output.stderr)
-        );
-        exit(-1);
-    }
-
-    info!("Flashed esp32. Please press reset button.");
+    let mut psu = power::prepare_psu();
+    power::check_buck_rails_within_range(&mut psu);
+    esp32::prepare_esp32(&mut psu);
 
     // Tests:
     // 1. Power OK on 3v3, 5V
@@ -89,70 +44,15 @@ fn main() {
     // 12. Erase flash
 }
 
-fn wait_for_esp32(time: Duration) -> Result<String> {
-    let start = Instant::now();
+pub fn fail_test(psu: &mut InstekGpp) -> ! {
+    warn!("Turning PSU off.");
+    psu.all_outputs_off()
+        .map_err(|e| {
+            error!("!!! FAILED TO TURN OFF POWER SUPPLY: MANUALLY TURN OFF PSU NOW !!!");
+            error!("---> {e}");
+        })
+        .ok();
 
-    while start.elapsed() < time {
-        for dev in serialport::available_ports().unwrap() {
-            let SerialPortType::UsbPort(port) = dev.port_type else {
-                continue;
-            };
-
-            let Some(product) = port.product else {
-                continue;
-            };
-
-            if product == "USB JTAG_serial debug unit" {
-                return Ok(dev.port_name);
-            }
-        }
-
-        sleep(Duration::from_millis(100));
-    }
-
-    Err(anyhow!("No ESP32 found."))
-}
-
-fn flash_esp32(port: &str) -> io::Result<Output> {
-    Command::new("esptool.py")
-        .args(
-            formatdoc! {"
-                --chip esp32s3
-                --port {port}
-                --baud 460800 --before default_reset
-                --after hard_reset write_flash
-                -z
-                --flash_mode dio
-                --flash_freq 80m
-                --flash_size 8MB 0x0
-                ../build/fw/host/bootloader.bin
-                0x8000
-                ../build/fw/host/partitions.bin
-                0xd000
-                ../build/fw/host/ota_data_initial.bin
-                0x10000
-                ../build/fw/host/firmware.bin"
-            }
-            .split_ascii_whitespace(),
-        )
-        .output()
-}
-
-fn prepare_psu(psu: &mut InstekGpp) -> Result<()> {
-    psu.all_outputs_off()?;
-
-    psu.set_output_voltage(Channel::C4, 15.0)?;
-    psu.set_output_current(Channel::C4, 1.1)?;
-
-    psu.set_output_voltage(Channel::C1, 0.0)?;
-    psu.set_output_current(Channel::C1, 0.0)?;
-    psu.set_load_mode_on(Channel::C1)?;
-
-    psu.set_output_voltage(Channel::C2, 0.0)?;
-    psu.set_output_current(Channel::C2, 0.0)?;
-    psu.set_load_mode_on(Channel::C2)?;
-
-    psu.all_outputs_on()?;
-
-    Ok(())
+    error!("##### FAIL ######");
+    exit(-1);
 }
