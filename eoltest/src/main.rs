@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use indoc::formatdoc;
+use instekgpp::{InstekGpp, Channel};
 use serialport::SerialPortType;
 use tracing::{error, info, warn, Level};
 use tracing_subscriber::FmtSubscriber;
@@ -19,6 +20,10 @@ fn main() {
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     info!("CCMN EOL Test ----");
+    info!("Preparing power supply...");
+    let mut psu = InstekGpp::new_first_available().unwrap();
+    prepare_psu(&mut psu).unwrap();
+
     info!("Waiting for ESP32 JTAG/serial device...");
 
     let dev = wait_for_esp32(Duration::MAX).unwrap();
@@ -106,4 +111,15 @@ fn flash_esp32(port: &str) -> io::Result<Output> {
             .split_ascii_whitespace(),
         )
         .output()
+}
+
+fn prepare_psu(psu: &mut InstekGpp) -> Result<()> {
+    psu.all_outputs_off()?;
+
+    psu.set_output_voltage(Channel::C1, 15.0)?;
+    psu.set_output_current(Channel::C1, 1.1)?;
+
+    psu.all_outputs_on()?;
+
+    Ok(())
 }
