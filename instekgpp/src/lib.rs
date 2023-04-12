@@ -1,3 +1,8 @@
+use std::{
+    io::{BufRead, BufReader},
+    time::Duration,
+};
+
 use serialport::SerialPort;
 
 #[derive(Debug, thiserror::Error)]
@@ -8,12 +13,16 @@ pub enum Error {
     WriteError(String),
     #[error("Failed to open power supply: {0}")]
     OpenError(String),
+    #[error("Error reading from power supply: {0}")]
+    ReadError(String),
     #[error("Voltage {0}V out of range for channel {1}")]
     VoltageOutOfRange(f64, Channel),
     #[error("Current {0}A out of range for channel {1}")]
     CurrentOutOfRange(f64, Channel),
     #[error("Channel {0} does not support load mode.")]
-    ChannelDoesNotSupportLoadMode(Channel)
+    ChannelDoesNotSupportLoadMode(Channel),
+    #[error("Invalid response from power supply.")]
+    InvalidResponse,
 }
 
 pub struct InstekGpp {
@@ -24,7 +33,7 @@ pub enum Channel {
     C1,
     C2,
     C3,
-    C4
+    C4,
 }
 
 impl Channel {
@@ -38,21 +47,23 @@ impl Channel {
     }
 
     fn is_voltage_within_range(&self, voltage: f64) -> bool {
-        voltage >= 0.0 && match self {
-            Channel::C1 => voltage <= 32.0,
-            Channel::C2 => voltage <= 32.0,
-            Channel::C3 => voltage <= 5.0,
-            Channel::C4 => voltage <= 15.0,
-        }
+        voltage >= 0.0
+            && match self {
+                Channel::C1 => voltage <= 32.0,
+                Channel::C2 => voltage <= 32.0,
+                Channel::C3 => voltage <= 5.0,
+                Channel::C4 => voltage <= 15.0,
+            }
     }
 
     fn is_current_within_range(&self, current: f64) -> bool {
-        current >= 0.0 && match self {
-            Channel::C1 => current <= 3.2,
-            Channel::C2 => current <= 3.2,
-            Channel::C3 => current <= 1.1,
-            Channel::C4 => current <= 1.1,
-        }
+        current >= 0.0
+            && match self {
+                Channel::C1 => current <= 3.2,
+                Channel::C2 => current <= 3.2,
+                Channel::C3 => current <= 1.1,
+                Channel::C4 => current <= 1.1,
+            }
     }
 }
 
@@ -68,25 +79,27 @@ impl std::fmt::Debug for Channel {
     }
 }
 
+macro_rules! port_op {
+    ($op: expr, $err: tt) => {
+        $op.map_err(|e| Error::$err(e.to_string()))
+    };
+}
+
 impl InstekGpp {
     pub fn new_first_available() -> Result<InstekGpp, Error> {
         // iterate through serial ports
         for dev in serialport::available_ports().map_err(|_| Error::NoDeviceFound)? {
-            eprintln!("device::: {dev:#?}");
-
-            // is it a gpp?
             let serialport::SerialPortType::UsbPort(port) = dev.port_type else {
                 continue;
             };
 
-            eprintln!("{:#?}", port.manufacturer);
-
+            // is it a gpp?
             if port.vid == 8580 && port.pid == 87 {
-                return Ok(InstekGpp {
-                    port: serialport::new(dev.port_name, 115200)
-                        .open()
-                        .map_err(|e| Error::OpenError(e.to_string()))?,
-                });
+                let mut port = port_op!(serialport::new(dev.port_name, 115200).open(), OpenError)?;
+
+                port_op!(port.set_timeout(Duration::from_millis(10)), OpenError)?;
+
+                return Ok(InstekGpp { port });
             }
         }
 
@@ -94,17 +107,13 @@ impl InstekGpp {
     }
 
     pub fn all_outputs_off(&mut self) -> Result<(), Error> {
-        self.port
-            .write(":ALLOUTOFF\r\n".as_bytes())
-            .map_err(|e| Error::WriteError(e.to_string()))?;
+        port_op!(self.port.write(":ALLOUTOFF\r\n".as_bytes()), WriteError)?;
 
         Ok(())
     }
 
     pub fn all_outputs_on(&mut self) -> Result<(), Error> {
-        self.port
-            .write(":ALLOUTON\r\n".as_bytes())
-            .map_err(|e| Error::WriteError(e.to_string()))?;
+        port_op!(self.port.write(":ALLOUTON\r\n".as_bytes()), WriteError)?;
 
         Ok(())
     }
@@ -114,11 +123,12 @@ impl InstekGpp {
             return Err(Error::VoltageOutOfRange(voltage, channel));
         }
 
-        eprintln!("{}", format!(":SOURce{}:VOLTage {:.3}", channel.to_num(), voltage));
-
-        self.port
-            .write(format!(":SOURce{}:VOLTage {:.3}\r\n", channel.to_num(), voltage).as_bytes())
-            .map_err(|e| Error::WriteError(e.to_string()))?;
+        port_op!(
+            self.port.write(
+                format!(":SOURce{}:VOLTage {:.3}\r\n", channel.to_num(), voltage).as_bytes()
+            ),
+            WriteError
+        )?;
 
         Ok(())
     }
@@ -128,11 +138,12 @@ impl InstekGpp {
             return Err(Error::CurrentOutOfRange(current, channel));
         }
 
-        eprintln!("{}", format!(":SOURce{}:CURRent {:.3}", channel.to_num(), current));
-
-        self.port
-            .write(format!(":SOURce{}:CURRent {:.3}\r\n", channel.to_num(), current).as_bytes())
-            .map_err(|e| Error::WriteError(e.to_string()))?;
+        port_op!(
+            self.port.write(
+                format!(":SOURce{}:CURRent {:.3}\r\n", channel.to_num(), current).as_bytes()
+            ),
+            WriteError
+        )?;
 
         Ok(())
     }
@@ -142,11 +153,11 @@ impl InstekGpp {
             return Err(Error::ChannelDoesNotSupportLoadMode(channel));
         }
 
-        eprintln!("{}", format!(":LOAD{}:CC ON", channel.to_num()));
-
-        self.port
-            .write(format!(":LOAD{}:CC ON\r\n", channel.to_num()).as_bytes())
-            .map_err(|e| Error::WriteError(e.to_string()))?;
+        port_op!(
+            self.port
+                .write(format!(":LOAD{}:CC ON\r\n", channel.to_num()).as_bytes()),
+            WriteError
+        )?;
 
         Ok(())
     }
@@ -156,13 +167,47 @@ impl InstekGpp {
             return Err(Error::ChannelDoesNotSupportLoadMode(channel));
         }
 
-        eprintln!("{}", format!(":LOAD{}:CC OFF", channel.to_num()));
-
-        self.port
-            .write(format!(":LOAD{}:CC OFF\r\n", channel.to_num()).as_bytes())
-            .map_err(|e| Error::WriteError(e.to_string()))?;
+        port_op!(
+            self.port
+                .write(format!(":LOAD{}:CC OFF\r\n", channel.to_num()).as_bytes()),
+            WriteError
+        )?;
 
         Ok(())
+    }
+
+    pub fn measure_voltage(&mut self, channel: Channel) -> Result<f64, Error> {
+        let mut reader = BufReader::new(self.port.try_clone().unwrap());
+
+        port_op!(
+            self.port
+                .write(format!(":MEASure{}:VOLTage?\r\n", channel.to_num()).as_bytes()),
+            WriteError
+        )?;
+
+        port_op!(self.port.flush(), WriteError)?;
+
+        let mut line = String::new();
+        port_op!(reader.read_line(&mut line), ReadError)?;
+
+        Ok(line.trim().parse().map_err(|_| Error::InvalidResponse)?)
+    }
+
+    pub fn measure_current(&mut self, channel: Channel) -> Result<f64, Error> {
+        let mut reader = BufReader::new(self.port.try_clone().unwrap());
+
+        port_op!(
+            self.port
+                .write(format!(":MEASure{}:CURRent?\r\n", channel.to_num()).as_bytes()),
+            WriteError
+        )?;
+
+        port_op!(self.port.flush(), WriteError)?;
+
+        let mut line = String::new();
+        port_op!(reader.read_line(&mut line), ReadError)?;
+
+        Ok(line.trim().parse().map_err(|_| Error::InvalidResponse)?)
     }
 }
 
@@ -178,21 +223,39 @@ mod tests {
     fn test_new_first_available() -> Result<()> {
         let mut psu = InstekGpp::new_first_available()?;
 
+        let mut inner = || {
+            psu.all_outputs_off()?;
+
+            psu.set_output_current(Channel::C2, 3.1)?;
+            psu.set_output_voltage(Channel::C2, 16.0)?;
+
+            psu.set_output_current(Channel::C1, 3.0)?;
+            psu.set_load_mode_on(Channel::C1)?;
+
+            psu.all_outputs_on()?;
+
+            sleep(Duration::from_secs(4));
+            eprintln!(
+                "voltage::: {:.3} | current::: {:.3}",
+                psu.measure_voltage(Channel::C2)?,
+                psu.measure_current(Channel::C2)?
+            );
+
+            eprintln!(
+                "voltage::: {:.3} | current::: {:.3}",
+                psu.measure_voltage(Channel::C1)?,
+                psu.measure_current(Channel::C1)?
+            );
+
+            psu.all_outputs_off()?;
+            psu.set_load_mode_off(Channel::C1)?;
+
+            Ok(())
+        };
+
+        let res = inner();
         psu.all_outputs_off()?;
 
-        psu.set_output_current(Channel::C2, 3.1)?;
-        psu.set_output_voltage(Channel::C2, 16.0)?;
-
-        psu.set_output_current(Channel::C1, 3.0)?;
-        psu.set_load_mode_on(Channel::C1)?;
-
-        psu.all_outputs_on()?;
-
-        sleep(Duration::from_secs(4));
-
-        psu.all_outputs_off()?;
-        psu.set_load_mode_off(Channel::C1)?;
-
-        Ok(())
+        res
     }
 }
