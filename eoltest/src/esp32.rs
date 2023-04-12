@@ -1,21 +1,26 @@
-use std::{time::{Duration, Instant}, process::{exit, Output, Command}, thread::sleep, io};
+use std::{
+    io,
+    process::{exit, Command, Output},
+    thread::sleep,
+    time::{Duration, Instant},
+};
 
 use anyhow::{anyhow, Result};
 use indoc::formatdoc;
 use instekgpp::InstekGpp;
 use serialport::SerialPortType;
-use tracing::{info, error};
+use tracing::{error, info};
 
 use crate::fail_test;
 
-pub fn prepare_esp32(mut psu: &mut InstekGpp) {
+pub fn prepare_esp32(psu: &mut InstekGpp) {
     info!("Waiting for ESP32 JTAG/serial device...");
 
     let dev = match wait_for_esp32(Duration::from_secs(5)) {
         Ok(dev) => dev,
         Err(e) => {
             error!("Failed to find ESP32: {e}");
-            fail_test(&mut psu);
+            fail_test(psu);
         }
     };
 

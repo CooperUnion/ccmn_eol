@@ -1,20 +1,12 @@
-use anyhow::{anyhow, Result};
-use indoc::formatdoc;
-use instekgpp::{Channel, InstekGpp};
-use serialport::SerialPortType;
+use instekgpp::InstekGpp;
+
 use tracing::{error, info, warn, Level};
 use tracing_subscriber::FmtSubscriber;
 
-use std::{
-    io,
-    ops::Range,
-    process::{exit, Command, Output},
-    thread::sleep,
-    time::{Duration, Instant},
-};
+use std::process::exit;
 
-mod power;
 mod esp32;
+mod power;
 
 fn main() {
     let subscriber = FmtSubscriber::builder()
