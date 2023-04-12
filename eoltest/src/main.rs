@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use indoc::formatdoc;
-use instekgpp::{InstekGpp, Channel};
+use instekgpp::{Channel, InstekGpp};
 use serialport::SerialPortType;
 use tracing::{error, info, warn, Level};
 use tracing_subscriber::FmtSubscriber;
@@ -20,13 +20,38 @@ fn main() {
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     info!("CCMN EOL Test ----");
+
+    info!("Attaching to power supply...");
+    let mut psu = match InstekGpp::new_first_available() {
+        Ok(psu) => psu,
+        Err(e) => {
+            error!("Could not attach to power supply: {e}");
+            exit(-1);
+        }
+    };
+
     info!("Preparing power supply...");
-    let mut psu = InstekGpp::new_first_available().unwrap();
-    prepare_psu(&mut psu).unwrap();
+    match prepare_psu(&mut psu) {
+        Ok(()) => {
+            sleep(Duration::from_secs(5));
+            info!("Power supply ready.");
+        },
+        Err(e) => {
+            error!("Failed to prepare power supply: {e}");
+            exit(-1);
+        },
+    }
 
     info!("Waiting for ESP32 JTAG/serial device...");
 
-    let dev = wait_for_esp32(Duration::MAX).unwrap();
+    let dev = match wait_for_esp32(Duration::from_secs(5)) {
+        Ok(dev) => dev,
+        Err(e) => {
+            error!("Failed to find ESP32: {e}");
+            psu.all_outputs_off().unwrap();
+            exit(-1);
+        },
+    };
 
     info!("Found esp32 at {dev}");
     info!("Flashing target {dev} using esptool...");
@@ -116,8 +141,16 @@ fn flash_esp32(port: &str) -> io::Result<Output> {
 fn prepare_psu(psu: &mut InstekGpp) -> Result<()> {
     psu.all_outputs_off()?;
 
-    psu.set_output_voltage(Channel::C1, 15.0)?;
-    psu.set_output_current(Channel::C1, 1.1)?;
+    psu.set_output_voltage(Channel::C4, 15.0)?;
+    psu.set_output_current(Channel::C4, 1.1)?;
+
+    psu.set_output_voltage(Channel::C1, 0.0)?;
+    psu.set_output_current(Channel::C1, 0.0)?;
+    psu.set_load_mode_on(Channel::C1)?;
+
+    psu.set_output_voltage(Channel::C2, 0.0)?;
+    psu.set_output_current(Channel::C2, 0.0)?;
+    psu.set_load_mode_on(Channel::C2)?;
 
     psu.all_outputs_on()?;
 
