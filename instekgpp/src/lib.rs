@@ -9,7 +9,11 @@ pub enum Error {
     #[error("Failed to open power supply: {0}")]
     OpenError(String),
     #[error("Voltage {0}V out of range for channel {1}")]
-    VoltageOutOfRange(f64, Channel)
+    VoltageOutOfRange(f64, Channel),
+    #[error("Current {0}A out of range for channel {1}")]
+    CurrentOutOfRange(f64, Channel),
+    #[error("Channel {0} does not support load mode.")]
+    ChannelDoesNotSupportLoadMode(Channel)
 }
 
 pub struct InstekGpp {
@@ -35,10 +39,19 @@ impl Channel {
 
     fn is_voltage_within_range(&self, voltage: f64) -> bool {
         voltage >= 0.0 && match self {
-            Channel::C1 => voltage <= 15.0,
+            Channel::C1 => voltage <= 32.0,
             Channel::C2 => voltage <= 32.0,
-            Channel::C3 => voltage <= 32.0,
-            Channel::C4 => voltage <= 5.0,
+            Channel::C3 => voltage <= 5.0,
+            Channel::C4 => voltage <= 15.0,
+        }
+    }
+
+    fn is_current_within_range(&self, current: f64) -> bool {
+        current >= 0.0 && match self {
+            Channel::C1 => current <= 3.2,
+            Channel::C2 => current <= 3.2,
+            Channel::C3 => current <= 1.1,
+            Channel::C4 => current <= 1.1,
         }
     }
 }
@@ -101,8 +114,52 @@ impl InstekGpp {
             return Err(Error::VoltageOutOfRange(voltage, channel));
         }
 
+        eprintln!("{}", format!(":SOURce{}:VOLTage {:.3}", channel.to_num(), voltage));
+
         self.port
-            .write(format!(":SOURce{}:VOLTage {:.3}", channel.to_num(), voltage).as_bytes())
+            .write(format!(":SOURce{}:VOLTage {:.3}\r\n", channel.to_num(), voltage).as_bytes())
+            .map_err(|e| Error::WriteError(e.to_string()))?;
+
+        Ok(())
+    }
+
+    pub fn set_output_current(&mut self, channel: Channel, current: f64) -> Result<(), Error> {
+        if !channel.is_current_within_range(current) {
+            return Err(Error::CurrentOutOfRange(current, channel));
+        }
+
+        eprintln!("{}", format!(":SOURce{}:CURRent {:.3}", channel.to_num(), current));
+
+        self.port
+            .write(format!(":SOURce{}:CURRent {:.3}\r\n", channel.to_num(), current).as_bytes())
+            .map_err(|e| Error::WriteError(e.to_string()))?;
+
+        Ok(())
+    }
+
+    pub fn set_load_mode_on(&mut self, channel: Channel) -> Result<(), Error> {
+        if matches!(channel, Channel::C3 | Channel::C4) {
+            return Err(Error::ChannelDoesNotSupportLoadMode(channel));
+        }
+
+        eprintln!("{}", format!(":LOAD{}:CC ON", channel.to_num()));
+
+        self.port
+            .write(format!(":LOAD{}:CC ON\r\n", channel.to_num()).as_bytes())
+            .map_err(|e| Error::WriteError(e.to_string()))?;
+
+        Ok(())
+    }
+
+    pub fn set_load_mode_off(&mut self, channel: Channel) -> Result<(), Error> {
+        if matches!(channel, Channel::C3 | Channel::C4) {
+            return Err(Error::ChannelDoesNotSupportLoadMode(channel));
+        }
+
+        eprintln!("{}", format!(":LOAD{}:CC OFF", channel.to_num()));
+
+        self.port
+            .write(format!(":LOAD{}:CC OFF\r\n", channel.to_num()).as_bytes())
             .map_err(|e| Error::WriteError(e.to_string()))?;
 
         Ok(())
@@ -111,14 +168,31 @@ impl InstekGpp {
 
 #[cfg(test)]
 mod tests {
-    use crate::Channel;
+    use std::{thread::sleep, time::Duration};
+
+    use crate::{Channel, InstekGpp};
+
+    use anyhow::Result;
 
     #[test]
-    fn test_new_first_available() {
-        let mut psu = crate::InstekGpp::new_first_available().unwrap();
+    fn test_new_first_available() -> Result<()> {
+        let mut psu = InstekGpp::new_first_available()?;
 
-        psu.all_outputs_off().unwrap();
-        psu.set_output_voltage(Channel::C1, 3.0).unwrap();
-        psu.all_outputs_on().unwrap();
+        psu.all_outputs_off()?;
+
+        psu.set_output_current(Channel::C2, 3.1)?;
+        psu.set_output_voltage(Channel::C2, 16.0)?;
+
+        psu.set_output_current(Channel::C1, 3.0)?;
+        psu.set_load_mode_on(Channel::C1)?;
+
+        psu.all_outputs_on()?;
+
+        sleep(Duration::from_secs(4));
+
+        psu.all_outputs_off()?;
+        psu.set_load_mode_off(Channel::C1)?;
+
+        Ok(())
     }
 }
