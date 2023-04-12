@@ -1,12 +1,14 @@
 use anyhow::{anyhow, Result};
 use indoc::formatdoc;
-use tracing::{info, error, Level, warn};
 use serialport::SerialPortType;
+use tracing::{error, info, warn, Level};
 use tracing_subscriber::FmtSubscriber;
 
 use std::{
+    io,
     process::{exit, Command, Output},
-    time::{self, Duration, Instant}, thread::sleep, io,
+    thread::sleep,
+    time::{self, Duration, Instant},
 };
 
 fn main() {
@@ -14,8 +16,7 @@ fn main() {
         .with_max_level(Level::TRACE)
         .finish();
 
-    tracing::subscriber::set_global_default(subscriber)
-        .expect("setting default subscriber failed");
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     info!("CCMN EOL Test ----");
     info!("Waiting for ESP32 JTAG/serial device...");
@@ -72,7 +73,7 @@ fn wait_for_esp32(time: Duration) -> Result<String> {
             };
 
             if product == "USB JTAG_serial debug unit" {
-                return Ok(dev.port_name)
+                return Ok(dev.port_name);
             }
         }
 
