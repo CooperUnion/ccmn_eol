@@ -25,24 +25,17 @@ fn main() {
         );
     }
 
-    macro_rules! m {
-        ($name:ident, $headers: expr) => {
-            ModHeaders {
-                mod_name: stringify!($name),
-                headers: $headers.into(),
-            }
-        };
-    }
+    // macro_rules! m {
+    //     ($name:ident, $headers: expr) => {
+    //         ModHeaders {
+    //             mod_name: stringify!($name),
+    //             headers: $headers.into(),
+    //         }
+    //     };
+    // }
 
-    let mods = vec![
-        m!(
-            ember_tasking,
-            [
-                "../../lib/ember/ember-tasking/ember_taskglue.h".into(),
-                "../../lib/ember/ember-tasking/ember_tasking.h".into()
-            ]
-        ),
-        m!(libeeprom, ["../eeprom.h".into()]),
+    let mods: Vec<ModHeaders> = vec![
+        //
     ];
 
     // Get build flags that platformio is using, else set some defaults.

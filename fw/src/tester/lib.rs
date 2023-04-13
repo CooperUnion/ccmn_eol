@@ -60,15 +60,9 @@ mod imports {
     }
 }
 
-use imports::{ember_tasking, freelunch, libeeprom, opencan, pins};
-
-mod sys;
-pub use sys::*;
-mod util;
+use imports::{ember_tasking, freelunch, opencan, pins};
 
 mod entry;
 
 mod leds;
 mod state;
-
-mod eeprom;
