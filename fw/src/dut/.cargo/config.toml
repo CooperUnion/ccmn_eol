@@ -6,5 +6,3 @@ rustflags = "--cfg espidf_time64" # Necessary for ESP-IDF 5.0
 [unstable]
 build-std = ["core", "std", "panic_abort"]
 
-[env]
-ESP_IDF_SYS_ROOT_CRATE = "ccmn_eol_tester_fw"

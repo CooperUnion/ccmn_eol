@@ -35,8 +35,3 @@ extern "C" fn eeprom_1hz() {
         // Send CAN error message
     }
 }
-
-#[no_mangle]
-extern "C" fn CANTX_populate_DUT_EepromTestStatus(_m: &mut opencan::tx::CAN_Message_DUT_EepromTestStatus) {
-
-}
