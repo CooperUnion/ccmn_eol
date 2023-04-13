@@ -7,7 +7,6 @@ version = "0.1.0"
 path = "lib.rs"
 name = "ccmn_eol_shared"
 edition = "2021"
-crate-type = ["staticlib"]
 required-features = []
 
 [build-dependencies]

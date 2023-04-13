@@ -20,6 +20,6 @@ use imports::{ember_tasking, libeeprom};
 
 mod sys;
 pub use sys::*;
-mod util;
+pub mod util;
 
-mod eeprom;
+pub mod eeprom;

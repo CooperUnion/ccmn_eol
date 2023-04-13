@@ -25,10 +25,6 @@ fn main() {
         );
     }
 
-    let pio_build_dir = env_required!(CARGO_PIO_BUILD_PROJECT_BUILD_DIR);
-    let opencan_node = env_required!(CARGO_PIO_OPENCAN_NODE);
-    let opencan_generated_dir = format!("{pio_build_dir}/opencan_generated/{opencan_node}/");
-
     macro_rules! m {
         ($name:ident, $headers: expr) => {
             ModHeaders {
@@ -46,20 +42,6 @@ fn main() {
                 "../../lib/ember/ember-tasking/ember_tasking.h".into()
             ]
         ),
-        m!(node_pins, ["../../ccmn_defs/ccmn-pins/node_pins.h".into()]),
-        m!(
-            opencan_rx,
-            [format!("{opencan_generated_dir}/opencan_rx.h")]
-        ),
-        m!(
-            opencan_tx,
-            [format!("{opencan_generated_dir}/opencan_tx.h")]
-        ),
-        m!(
-            opencan_callbacks,
-            [format!("{opencan_generated_dir}/opencan_callbacks.h")]
-        ),
-        m!(freelunch, ["../freelunch.h".into()]),
         m!(libeeprom, ["../eeprom.h".into()]),
     ];
 

@@ -3,6 +3,7 @@ pub use core::sync::atomic::{
     AtomicU8,
 };
 
+#[macro_export]
 macro_rules! glo {
     ($field:ident) => {
         paste::paste! {
@@ -11,8 +12,9 @@ macro_rules! glo {
     };
 }
 
-pub(crate) use glo;
+pub use glo;
 
+#[macro_export]
 macro_rules! glo_w {
     ($field:ident, $val:expr) => {
         paste::paste! {
@@ -21,4 +23,4 @@ macro_rules! glo_w {
     };
 }
 
-pub(crate) use glo_w;
+pub use glo_w;
