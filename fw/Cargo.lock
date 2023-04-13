@@ -173,6 +173,19 @@ name = "ccmn_eol_dut_fw"
 version = "0.1.0"
 dependencies = [
  "bindgen 0.65.1",
+ "ccmn_eol_shared",
+ "dotenv",
+ "esp-idf-sys",
+ "git-version",
+ "paste",
+ "static_assertions",
+]
+
+[[package]]
+name = "ccmn_eol_shared"
+version = "0.1.0"
+dependencies = [
+ "bindgen 0.65.1",
  "dotenv",
  "esp-idf-sys",
  "git-version",

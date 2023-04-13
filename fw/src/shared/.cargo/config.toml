@@ -1,0 +1,8 @@
+[build]
+target = "xtensa-esp32s3-espidf"
+# https://github.com/esp-rs/esp-idf-sys/blob/432d7c52ec27dda01c7c5ca90c25c4a06b98096a/src/lib.rs#L24
+rustflags = "--cfg espidf_time64" # Necessary for ESP-IDF 5.0
+
+[unstable]
+build-std = ["core", "std", "panic_abort"]
+
