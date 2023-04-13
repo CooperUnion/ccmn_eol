@@ -42,11 +42,11 @@ fn main() {
         m!(
             ember_tasking,
             [
-                "lib/ember/ember-tasking/ember_taskglue.h".into(),
-                "lib/ember/ember-tasking/ember_tasking.h".into()
+                "../../lib/ember/ember-tasking/ember_taskglue.h".into(),
+                "../../lib/ember/ember-tasking/ember_tasking.h".into()
             ]
         ),
-        m!(node_pins, ["ccmn_defs/ccmn-pins/node_pins.h".into()]),
+        m!(node_pins, ["../../ccmn_defs/ccmn-pins/node_pins.h".into()]),
         m!(
             opencan_rx,
             [format!("{opencan_generated_dir}/opencan_rx.h")]
@@ -59,8 +59,8 @@ fn main() {
             opencan_callbacks,
             [format!("{opencan_generated_dir}/opencan_callbacks.h")]
         ),
-        m!(freelunch, ["src/freelunch.h".into()]),
-        m!(libeeprom, ["src/eeprom.h".into()]),
+        m!(freelunch, ["../freelunch.h".into()]),
+        m!(libeeprom, ["../eeprom.h".into()]),
     ];
 
     // Get build flags that platformio is using, else set some defaults.

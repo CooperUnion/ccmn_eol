@@ -1,9 +1,39 @@
 nodes:
-- HOST:
+- TESTER:
+    # rx:
+    #     - DUT_EepromTestStatus
     messages:
-    - Status:
-        id: 0x40
+    # - Status:
+    #     id: 0x40
+    #     cycletime: 100
+    #     signals:
+    #         - counter:
+    #             width: 8
+    # - Tests:
+    #     id: 0x50
+    #     cycletime: 10
+    #     signals:
+    #         - eepromTest:
+    #             description: Test the eeprom
+    #             width: 1
+    #         # - adcTest:
+    #         #     description: Test the ADCs
+    #         #     width: 1
+    #         # - gpioTest:
+    #         #     description: Test the GPIOs
+    #         #     width: 1
+
+# - TESTER:
+#     messages:
+
+- DUT:
+    # rx:
+    #     - HOST_Tests
+    messages:
+    - EepromTestStatus:
+        id: 0x100
         cycletime: 10
         signals:
-        - counter:
-            width: 8
+            - testFailed:
+                description: EEPROM self test failed
+                width: 1

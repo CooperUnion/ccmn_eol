@@ -169,10 +169,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50d30906286121d95be3d479533b458f87493b30a4b5f79a607db8f5d11aa91f"
 
 [[package]]
-name = "ccmn_eol_fw"
+name = "ccmn_eol_dut_fw"
 version = "0.1.0"
 dependencies = [
  "bindgen 0.65.1",
+ "ccmn_eol_shared",
+ "dotenv",
+ "esp-idf-sys",
+ "git-version",
+ "paste",
+ "static_assertions",
+]
+
+[[package]]
+name = "ccmn_eol_shared"
+version = "0.1.0"
+dependencies = [
+ "bindgen 0.65.1",
+ "dotenv",
+ "esp-idf-sys",
+ "git-version",
+ "paste",
+ "static_assertions",
+]
+
+[[package]]
+name = "ccmn_eol_tester_fw"
+version = "0.1.0"
+dependencies = [
+ "bindgen 0.65.1",
+ "ccmn_eol_shared",
  "dotenv",
  "esp-idf-sys",
  "git-version",

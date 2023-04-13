@@ -86,7 +86,8 @@ class Cargo:
         env["ENV"]["CARGO_PIO_BUILD_PIO_FRAMEWORK_DIR"] = env.PioPlatform().get_package_dir(env.PioPlatform().frameworks[env.GetProjectOption("framework")[0]]["package"])
 
         self.__cargo_ran = True
-        result = env.Execute(f"cargo build {'--release' if self.__cargo_profile == 'release' else ''} --lib --target {self.__rust_target} {self.__cargo_options}")
+        # HACK: use rust lib name as package name
+        result = env.Execute(f"cargo build -p {self.__rust_lib} {'--release' if self.__cargo_profile == 'release' else ''} --lib --target {self.__rust_target} {self.__cargo_options}")
 
         print("<<< CARGO")
 

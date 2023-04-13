@@ -1,7 +1,8 @@
+use ccmn_eol_shared::static_gpio;
+
 use crate::ember_tasking::ember_rate_funcs_S;
 
-use crate::atomics::*;
-use crate::gpio::*;
+use ccmn_eol_shared::atomics::*;
 use crate::pins;
 
 pub static RATE_FUNCS: ember_rate_funcs_S = ember_rate_funcs_S {

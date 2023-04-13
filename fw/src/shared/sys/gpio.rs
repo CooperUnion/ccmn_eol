@@ -45,9 +45,11 @@ impl GpioPin {
     }
 }
 
+#[macro_export]
 macro_rules! static_gpio {
     ($name: ident, $pad: expr, $mode: ident) => {
-        static $name: GpioPin = GpioPin::new($pad, GpioMode::$mode);
+        static $name: ccmn_eol_shared::gpio::GpioPin = ccmn_eol_shared::gpio::GpioPin::new($pad, ccmn_eol_shared::gpio::GpioMode::$mode);
     };
 }
-pub(crate) use static_gpio;
+
+pub use static_gpio;
