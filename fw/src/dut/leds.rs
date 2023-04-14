@@ -2,8 +2,8 @@ use ccmn_eol_shared::static_gpio;
 
 use crate::ember_tasking::ember_rate_funcs_S;
 
-use ccmn_eol_shared::atomics::*;
 use crate::pins;
+use ccmn_eol_shared::atomics::*;
 
 pub static RATE_FUNCS: ember_rate_funcs_S = ember_rate_funcs_S {
     call_init: Some(leds_init),
