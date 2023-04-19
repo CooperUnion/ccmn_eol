@@ -64,6 +64,6 @@ use imports::{ember_tasking, freelunch, opencan, pins};
 
 mod entry;
 
+mod gpiotest;
 mod leds;
 mod state;
-mod gpiotest;
