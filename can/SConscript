@@ -1,7 +1,7 @@
 Import('env')
 
 # Make DBC ------------------------------------------------
-GENERATED_DBC   = env.File('igvc_can.dbc')
+GENERATED_DBC   = env.File('eol_can.dbc')
 CAN_YML         = env.File('can.yml')
 DBC_EMITTER     = env.File('create-dbc.py')
 
@@ -22,5 +22,5 @@ env.Command(
 env.Depends(dbc_builder, env['PIP_PACKAGES'])
 
 env.Alias('dbc', dbc_builder)
-env['AddHelp']('dbc', 'Build igvc_can.dbc')
+env['AddHelp']('dbc', f'Build {GENERATED_DBC}')
 # ---------------------------------------------------------

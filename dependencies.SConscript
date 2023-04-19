@@ -56,7 +56,7 @@ RUST_CURRENT_PATH   = env.Dir('rust/current')
 env['CARGO']        = RUST_TOOLS_PATH.File('cargo')
 
 env['ENV']['CARGO_HOME']  = RUST_HOME.abspath
-env['ENV']['RUSTUP_HOME'] = RUST_HOME.up().abspath
+env['ENV']['RUSTUP_HOME'] = RUST_HOME.abspath
 
 # https://blog.rust-lang.org/inside-rust/2023/01/30/cargo-sparse-protocol.html
 env['ENV']['CARGO_REGISTRIES_CRATES_IO_PROTOCOL'] = 'sparse'
@@ -78,6 +78,7 @@ env.Alias('deps-rust', rust_install_builder)
 # ---------------------------------------------------------
 
 # ESP Rust ------------------------------------------------
+# Note that this will install in the rust/x.x.x path, not rust/, whatever
 ESP_RUST_PATH     = env.Dir(env['ENV']['RUSTUP_HOME']).Dir('toolchains/espr')
 ESP_RUST_ENV_FILE = env.Dir(env['ENV']['RUSTUP_HOME']).File('esp-env.sh')
 
