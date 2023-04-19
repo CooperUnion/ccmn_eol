@@ -77,8 +77,19 @@ env.PrependENVPath('PATH', RUST_TOOLS_PATH.abspath)
 env.Alias('deps-rust', rust_install_builder)
 # ---------------------------------------------------------
 
+
 # ESP Rust ------------------------------------------------
 # Note that this will install in the rust/x.x.x path, not rust/, whatever
+
+env['ESPUP'] = RUST_TOOLS_PATH.File('espup')
+
+# espup
+espup_install_builder = env.Command(
+  env['ESPUP'],
+  env['CARGO'],
+  '$CARGO install espup'
+)
+
 ESP_RUST_PATH     = env.Dir(env['ENV']['RUSTUP_HOME']).Dir('toolchains/espr')
 ESP_RUST_ENV_FILE = env.Dir(env['ENV']['RUSTUP_HOME']).File('esp-env.sh')
 
@@ -86,8 +97,8 @@ env['ESP_CARGO']  = ESP_RUST_PATH.File('bin/cargo')
 
 esp_rust_install_builder = env.Command(
     env['ESP_CARGO'],
-    [],
-    f'espup install --name espr -t esp32s3 -f {ESP_RUST_ENV_FILE.abspath} -v $ESP_RUST_VERSION'
+    env['ESPUP'],
+    f'$ESPUP install --name espr -t esp32s3 -f {ESP_RUST_ENV_FILE.abspath} -v $ESP_RUST_VERSION'
 )
 
 # Update these as needed from esp-env.sh
@@ -97,6 +108,7 @@ env['ENV']['LIBCLANG_PATH'] = ESP_RUST_PATH.Dir('xtensa-esp32-elf-clang/esp-15.0
 
 env.Alias('deps-esp-rust', esp_rust_install_builder)
 # ---------------------------------------------------------
+
 
 # OpenCAN -------------------------------------------------
 env['OPENCAN_CLI'] = env.Dir(env['ENV']['CARGO_HOME']).File('bin/opencan-cli')
