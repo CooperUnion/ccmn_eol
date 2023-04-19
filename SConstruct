@@ -98,6 +98,8 @@ if 'shell' in COMMAND_LINE_TARGETS:
     if parent_shell in ['bash', 'fish', 'sh', 'zsh']:
         print("* Dropping you into a shell...")
         env['ENV']['SCONS_SHELL'] = '1' # just a marker in case anyone needs it
+        # propagate entire external env merged with env['ENV']
+        env['ENV'] = {**os.environ, **env['ENV']}
         env.Execute(parent_shell_path)
     else:
         print(f"Won't execute shell for unsupported parent process {parent_shell}!")
