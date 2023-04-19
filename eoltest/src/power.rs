@@ -4,17 +4,15 @@ use anyhow::Result;
 use instekgpp::{Channel, InstekGpp};
 use tracing::{error, info, warn};
 
-use crate::fail_test;
-
 const OK_3V3_RANGE: Range<f64> = 3.27..3.35;
 const OK_5V0_RANGE: Range<f64> = 4.98..5.02;
 
-pub fn check_buck_rails_within_range(psu: &mut InstekGpp) {
+pub fn check_buck_rails_within_range(psu: &mut InstekGpp) -> bool {
     let (v_3v3, v_5v0) = match get_rail_voltages(psu) {
         Ok(v) => v,
         Err(e) => {
             error!("Error while reading rail voltages: {e}");
-            fail_test(psu);
+            return false;
         }
     };
 
@@ -23,7 +21,7 @@ pub fn check_buck_rails_within_range(psu: &mut InstekGpp) {
             "~~3v3 OUT OF RANGE~~: acceptable is {:?}, actual was {:.2}",
             OK_3V3_RANGE, v_3v3
         );
-        fail_test(psu);
+        return false;
     }
 
     if !OK_5V0_RANGE.contains(&v_5v0) {
@@ -31,8 +29,10 @@ pub fn check_buck_rails_within_range(psu: &mut InstekGpp) {
             "~~5v0 OUT OF RANGE~~: acceptable is {:?}, actual was {:.2}",
             OK_5V0_RANGE, v_5v0
         );
-        fail_test(psu);
+        return false;
     }
+
+    true
 }
 
 fn get_rail_voltages(psu: &mut InstekGpp) -> Result<(f64, f64)> {
