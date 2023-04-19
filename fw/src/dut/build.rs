@@ -59,7 +59,6 @@ fn main() {
             opencan_callbacks,
             [format!("{opencan_generated_dir}/opencan_callbacks.h")]
         ),
-        m!(freelunch, ["../freelunch.h".into()]),
         m!(libeeprom, ["../eeprom.h".into()]),
     ];
 

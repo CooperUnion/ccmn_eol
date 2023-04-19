@@ -51,16 +51,12 @@ mod imports {
         include!(concat!(env!("OUT_DIR"), "/node_pins.rs"));
     }
 
-    pub mod freelunch {
-        include!(concat!(env!("OUT_DIR"), "/freelunch.rs"));
-    }
-
     pub mod libeeprom {
         include!(concat!(env!("OUT_DIR"), "/libeeprom.rs"));
     }
 }
 
-use imports::{ember_tasking, freelunch, libeeprom, opencan, pins};
+use imports::{ember_tasking, libeeprom, opencan, pins};
 
 mod entry;
 
