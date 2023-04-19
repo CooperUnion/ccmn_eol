@@ -87,6 +87,29 @@ Help(f'''
 ''')
 # ---------------------------------------------------------
 
+# shell ---------------------------------------------------
+if 'shell' in COMMAND_LINE_TARGETS:
+    import pathlib
+    import psutil
+
+    parent_shell_path = psutil.Process().parent().exe()
+    parent_shell = pathlib.PurePath(parent_shell_path).name
+
+    if parent_shell in ['bash', 'fish', 'sh', 'zsh']:
+        print("* Dropping you into a shell...")
+        env['ENV']['SCONS_SHELL'] = '1' # just a marker in case anyone needs it
+        env.Execute(parent_shell_path)
+    else:
+        print(f"Won't execute shell for unsupported parent process {parent_shell}!")
+        print("Try whitelisting it in the SConscript.")
+        exit(-1)
+
+# we want to execute the shell first, so we did that above.
+# alias 'shell' to None so scons doesn't try to build anything
+env.Alias('shell', None)
+
+# ---------------------------------------------------------
+
 if not COMMAND_LINE_TARGETS:
     from SCons.Script import help_text
     print(help_text)
