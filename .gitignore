@@ -1,3 +1,5 @@
 build/
+deps/
+.direnv
 .sconsign.dblite
 .vscode
