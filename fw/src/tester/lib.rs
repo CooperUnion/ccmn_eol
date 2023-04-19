@@ -66,3 +66,4 @@ mod entry;
 
 mod leds;
 mod state;
+mod gpiotest;

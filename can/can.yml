@@ -1,42 +1,29 @@
 nodes:
 - TESTER:
-    # rx:
-    #     - DUT_EepromTestStatus
+    rx:
+    - DUT_EepromTestStatus
     messages:
-    # - Status:
-    #     id: 0x40
-    #     cycletime: 100
-    #     signals:
-    #         - counter:
-    #             width: 8
-    # - Tests:
-    #     id: 0x50
-    #     cycletime: 10
-    #     signals:
-    #         - eepromTest:
-    #             description: Test the eeprom
-    #             width: 1
-    #         # - adcTest:
-    #         #     description: Test the ADCs
-    #         #     width: 1
-    #         # - gpioTest:
-    #         #     description: Test the GPIOs
-    #         #     width: 1
+    - GpioCmd:
+        id: 0x80
+        cycletime: 5
+        signals:
+        - currentGpio:
+            width: 6
+            enumerated_values:
+            - NONE: 63
 
-# - TESTER:
-#     messages:
 
 - DUT:
-    # rx:
-    #     - HOST_Tests
+    rx:
+    - TESTER_GpioCmd
     messages:
     - EepromTestStatus:
         id: 0x100
         cycletime: 10
         signals:
-            - testStatus:
-                description: EEPROM self test failed
-                enumerated_values:
-                    - NOT_RUN
-                    - TEST_PASSED
-                    - TEST_FAILED
+        - testStatus:
+            description: EEPROM self test failed
+            enumerated_values:
+            - NOT_RUN
+            - TEST_PASSED
+            - TEST_FAILED

@@ -35,8 +35,8 @@ pub fn eeprom_eol_test() {
 #[no_mangle]
 extern "C" fn CANTX_populate_DUT_EepromTestStatus(m: &mut CAN_Message_DUT_EepromTestStatus) {
     m.DUT_testStatus = match unsafe { EEPROM_TEST_STATUS } {
-        Some(true) => CAN_DUT_testStatus_CAN_DUT_TESTSTATUS_TEST_PASSED,
-        Some(false) => CAN_DUT_testStatus_CAN_DUT_TESTSTATUS_TEST_FAILED,
-        None => CAN_DUT_testStatus_CAN_DUT_TESTSTATUS_NOT_RUN,
-    };
+        Some(true) => CAN_DUT_testStatus::CAN_DUT_TESTSTATUS_TEST_PASSED,
+        Some(false) => CAN_DUT_testStatus::CAN_DUT_TESTSTATUS_TEST_FAILED,
+        None => CAN_DUT_testStatus::CAN_DUT_TESTSTATUS_NOT_RUN,
+    } as _;
 }
