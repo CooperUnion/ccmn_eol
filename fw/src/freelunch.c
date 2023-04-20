@@ -25,6 +25,9 @@ _Atomic uint32_t freelunch_messages_sent = 0;
 _Atomic bool freelunch_channel_connected_and_ready = false;
 
 void freelunch_can_rx_callback(const twai_message_t* message) {
+    if (!freelunch_channel_connected_and_ready)
+        return;
+
     BaseType_t res = xRingbufferSend(canrx_ringbuf, message, sizeof(*message), pdMS_TO_TICKS(0));
     if (res != pdTRUE) {
         ESP_LOGE(TAG, "Failed to send message to ringbuf");
