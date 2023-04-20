@@ -36,5 +36,5 @@ extern "C" fn leds_10hz() {
     LED1.set(count >= 5); // flip every half second
     LED2.set((count % 2) == 0);
 
-    println!("hello.. {}", glo!(counter_10hz));
+    // println!("hello.. {}", glo!(counter_10hz));
 }

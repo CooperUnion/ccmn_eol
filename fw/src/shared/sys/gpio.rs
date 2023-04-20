@@ -61,7 +61,7 @@ impl GpioPin {
 #[macro_export]
 macro_rules! gpio {
     ($pad: expr, $mode: ident) => {
-        ccmn_eol_shared::gpio::GpioPin::new($pad, ccmn_eol_shared::gpio::GpioMode::$mode);
+        crate::gpio::GpioPin::new($pad, crate::gpio::GpioMode::$mode)
     };
 }
 

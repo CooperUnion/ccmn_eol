@@ -1,7 +1,7 @@
 //! Main entrypoint to the firmware.
 //! `app_main` resets the boot partition to factory and starts ember_tasking.
 //! `app_main` exits and leaves behind the rate tasks to continue running.
-use std::panic;
+use std::{panic, time::Duration};
 
 use crate::ember_tasking::{ember_rate_funcs_S, ember_tasking_begin};
 
@@ -37,5 +37,9 @@ extern "C" fn app_main() {
 
         // tests
         crate::eeprom::eeprom_eol_test();
+        loop {
+            dbg!(crate::gpiotest::do_gpio_test());
+            std::thread::sleep(Duration::from_secs(1));
+        }
     }
 }

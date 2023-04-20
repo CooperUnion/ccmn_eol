@@ -29,8 +29,8 @@ extern "C" fn app_main() {
     unsafe {
         ember_bltools_set_boot_partition_to_factory();
 
-        println!("SWITCHING TO FREELUNCH CONSOLE...");
-        crate::freelunch::freelunch_init();
+        // println!("SWITCHING TO FREELUNCH CONSOLE...");
+        // crate::freelunch::freelunch_init();
 
         println!("***~~~ CCMN EOL Testing TESTER ~~~***");
         println!("firmware githash: {}", git_version::git_version!());

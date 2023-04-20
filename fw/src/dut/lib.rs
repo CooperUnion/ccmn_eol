@@ -64,3 +64,4 @@ mod leds;
 mod state;
 
 mod eeprom;
+mod gpiotest;

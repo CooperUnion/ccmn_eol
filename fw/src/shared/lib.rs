@@ -4,3 +4,5 @@
 mod sys;
 pub use sys::*;
 pub mod util;
+
+pub mod gpiotest;
