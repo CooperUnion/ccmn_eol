@@ -13,7 +13,7 @@ macro_rules! env_required {
     };
 }
 
-const LAST_RUN_DOTENV: &'static str = ".lastcargobuildenv";
+const LAST_RUN_DOTENV: &str = ".lastcargobuildenv";
 
 fn main() {
     println!("cargo:rerun-if-changed={LAST_RUN_DOTENV}");
@@ -69,7 +69,6 @@ fn main() {
 
     let cppdefines: Vec<String> = env_required!(CARGO_PIO_BUILD_CPPDEFINES)
         .split_ascii_whitespace()
-        .into_iter()
         .map(|f| format!("-D{f}"))
         .collect();
 

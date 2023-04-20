@@ -28,7 +28,7 @@ mod imports {
         macro_rules! canrx {
             ($signal:ident) => {
                 paste::paste! {
-                    unsafe { crate::opencan::rx::[<CANRX_get_ $signal>]() }
+                    unsafe { $crate::opencan::rx::[<CANRX_get_ $signal>]() }
                 }
             };
         }
@@ -39,7 +39,7 @@ mod imports {
         macro_rules! canrx_is_node_ok {
             ($node:ident) => {
                 paste::paste! {
-                    unsafe { crate::opencan::rx::[<CANRX_is_node_ $node _ok>]() }
+                    unsafe { $crate::opencan::rx::[<CANRX_is_node_ $node _ok>]() }
                 }
             };
         }

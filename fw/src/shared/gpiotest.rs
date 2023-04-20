@@ -4,6 +4,12 @@ pub struct EolGpios {
     pub pins: &'static [GpioPin],
 }
 
+impl Default for EolGpios {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EolGpios {
     pub fn new() -> Self {
         const EOL_PINS: &[GpioPin] = &[
@@ -35,7 +41,7 @@ impl EolGpios {
             gpio!(48, InputOutput),
         ];
 
-        EolGpios { pins: &EOL_PINS }
+        EolGpios { pins: EOL_PINS }
     }
 
     pub fn init(&self) {

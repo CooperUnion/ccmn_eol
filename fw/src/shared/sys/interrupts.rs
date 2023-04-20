@@ -79,9 +79,9 @@ pub unsafe fn restore_interrupts(level: PrevInterruptLevel) {
 #[macro_export]
 macro_rules! with_interrupts_disabled {
     ($stuff:expr) => {{
-        let prev = unsafe { crate::interrupts::disable_interrupts() };
+        let prev = unsafe { $crate::interrupts::disable_interrupts() };
         let tmp = $stuff;
-        unsafe { crate::interrupts::restore_interrupts(prev) };
+        unsafe { $crate::interrupts::restore_interrupts(prev) };
         tmp
     }};
 }
