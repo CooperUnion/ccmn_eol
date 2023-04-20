@@ -209,6 +209,7 @@ name = "ccmn_eol_tester_fw"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "atomic",
  "bindgen 0.65.1",
  "ccmn_eol_shared",
  "dotenv",

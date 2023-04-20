@@ -1,6 +1,7 @@
 use esp_idf_sys::{
-    gpio_config, gpio_config_t, gpio_get_level, gpio_set_level,
-    gpio_mode_t_GPIO_MODE_INPUT, gpio_mode_t_GPIO_MODE_OUTPUT, gpio_mode_t_GPIO_MODE_INPUT_OUTPUT, gpio_set_direction,
+    gpio_config, gpio_config_t, gpio_get_level, gpio_mode_t_GPIO_MODE_INPUT,
+    gpio_mode_t_GPIO_MODE_INPUT_OUTPUT, gpio_mode_t_GPIO_MODE_OUTPUT, gpio_set_direction,
+    gpio_set_level,
 };
 
 use crate::util::bit64;
@@ -41,8 +42,8 @@ impl GpioPin {
         unsafe { gpio_get_level(self.pad as i32) != 0 }
     }
 
-    pub fn pad(&self) -> u32 {
-        self.pad
+    pub fn pad(&self) -> u8 {
+        self.pad as _
     }
 }
 
@@ -66,7 +67,6 @@ macro_rules! gpio {
 }
 
 pub use gpio;
-
 
 #[macro_export]
 macro_rules! static_gpio {

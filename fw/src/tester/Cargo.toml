@@ -22,6 +22,7 @@ static_assertions = "1.1.0"
 
 ccmn_eol_shared = { path = "../shared" }
 anyhow = "1.0.70"
+atomic = "0.5.1"
 
 [package.metadata.esp-idf-sys]
 esp_idf_version = "v5.0.1" # NOTE: keep in sync with pio platform-espressif32 idf version

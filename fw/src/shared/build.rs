@@ -65,9 +65,7 @@ fn main() {
             .clang_args(build_flags.split_ascii_whitespace())
             .clang_args(&cppdefines)
             .parse_callbacks(Box::new(bindgen::CargoCallbacks))
-            .default_enum_style(bindgen::EnumVariation::Rust {
-                non_exhaustive: true,
-            })
+            .default_enum_style(bindgen::EnumVariation::ModuleConsts)
             .generate()
             .expect("Unable to generate bindings");
 

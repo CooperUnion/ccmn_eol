@@ -12,7 +12,7 @@ struct _G {
 }
 
 static _G: _G = _G {
-    test_status: Atomic::<_>::new(None)
+    test_status: Atomic::<_>::new(None),
 };
 
 /// Write and read from the eeprom
@@ -42,5 +42,5 @@ extern "C" fn CANTX_populate_DUT_EepromTestStatus(m: &mut CAN_Message_DUT_Eeprom
         Some(true) => CAN_DUT_testStatus::CAN_DUT_TESTSTATUS_TEST_PASSED,
         Some(false) => CAN_DUT_testStatus::CAN_DUT_TESTSTATUS_TEST_FAILED,
         None => CAN_DUT_testStatus::CAN_DUT_TESTSTATUS_NOT_RUN,
-    } as _;
+    };
 }

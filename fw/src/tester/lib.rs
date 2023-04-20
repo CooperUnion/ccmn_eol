@@ -60,7 +60,7 @@ mod imports {
     }
 }
 
-use imports::{ember_tasking, freelunch, opencan, pins};
+use imports::{ember_tasking, opencan, pins};
 
 mod entry;
 

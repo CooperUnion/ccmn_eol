@@ -1,7 +1,18 @@
-use anyhow::anyhow;
-use ccmn_eol_shared::gpiotest::EolGpios;
+use std::{thread::sleep, time::Duration};
 
-use crate::opencan::tx::*;
+use anyhow::anyhow;
+use atomic::Atomic;
+use ccmn_eol_shared::{atomics::*, gpiotest::EolGpios};
+
+use crate::{opencan::tx::*};
+
+struct _G {
+    gpio_cmd: Atomic<Option<u8>>,
+}
+
+static _G: _G = _G {
+    gpio_cmd: Atomic::<_>::new(None),
+};
 
 pub fn do_gpio_test() -> anyhow::Result<()> {
     // for each PLAIN_GPIO, send a CAN command to turn only that one on,
@@ -10,13 +21,27 @@ pub fn do_gpio_test() -> anyhow::Result<()> {
     gpios.init();
     gpios.set_all_to_input();
 
-    let state = gpios.read_all();
+    glo_w!(gpio_cmd, None);
+    // wait for a while for DUT to be up
+    sleep(Duration::from_secs(1));
 
     for pin in gpios.pins {
+        // if !canrx_is_node_ok!(DUT) {
+        //     dbg!(canrx!(DUT_testStatus));
+        //     return Err(anyhow!("Lost DUT while testing gpio!"));
+        // }
+
         let pad = pin.pad();
-        if (state >> pad & 1) != 1 {
-            return Err(anyhow!("GPIO state mismatch on pin {pad}: {state:064b}!"));
+        println!("testing pad {pad}");
+        glo_w!(gpio_cmd, Some(pad));
+        sleep(Duration::from_millis(20));
+
+        let state = gpios.read_all();
+        let desired_state = 1u64 << pad;
+        if state != desired_state {
+            return Err(anyhow!("GPIO state mismatch on pin {pad}:\n desired {state:064b}\n actual  {desired_state:064b}"));
         }
+        println!("pad {pad} ok");
     }
 
     Ok(())
@@ -24,5 +49,8 @@ pub fn do_gpio_test() -> anyhow::Result<()> {
 
 #[no_mangle]
 extern "C" fn CANTX_populate_TESTER_GpioCmd(m: &mut CAN_Message_TESTER_GpioCmd) {
-    m.TESTER_currentGpio = CAN_TESTER_currentGpio::CAN_TESTER_CURRENTGPIO_NONE as _;
+    m.TESTER_currentGpio = match glo!(gpio_cmd) {
+        None => CAN_TESTER_currentGpio::CAN_TESTER_CURRENTGPIO_NONE,
+        Some(g) => g.into(),
+    };
 }

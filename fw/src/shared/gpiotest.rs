@@ -1,7 +1,7 @@
-use crate::gpio::{GpioPin, gpio, GpioMode};
+use crate::gpio::{gpio, GpioMode, GpioPin};
 
 pub struct EolGpios {
-    pub pins: &'static [GpioPin]
+    pub pins: &'static [GpioPin],
 }
 
 impl EolGpios {
@@ -35,9 +35,7 @@ impl EolGpios {
             gpio!(48, InputOutput),
         ];
 
-        EolGpios {
-            pins: &EOL_PINS
-        }
+        EolGpios { pins: &EOL_PINS }
     }
 
     pub fn init(&self) {
@@ -59,10 +57,11 @@ impl EolGpios {
     }
 
     pub fn write_all(&self, bitmask: u64) {
+        println!("writing bitmask {bitmask:064b}");
         for pin in self.pins {
             let on = (bitmask >> pin.pad() & 1) != 0;
             pin.set(on);
-            println!("set pin {} to {on}", pin.pad());
+            // println!("set pin {} to {on}", pin.pad());
         }
     }
 

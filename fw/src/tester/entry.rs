@@ -3,7 +3,10 @@
 //! `app_main` exits and leaves behind the rate tasks to continue running.
 use std::{panic, time::Duration};
 
-use crate::{ember_tasking::{ember_rate_funcs_S, ember_tasking_begin}, gpiotest::do_gpio_test};
+use crate::{
+    ember_tasking::{ember_rate_funcs_S, ember_tasking_begin},
+    gpiotest::do_gpio_test,
+};
 
 // some extern declarations
 extern "C" {
