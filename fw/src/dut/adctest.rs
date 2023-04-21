@@ -20,7 +20,7 @@ use crate::{
     opencan::rx::*,
 };
 
-const ADC_TOLERANCE_MV: i16 = 10;
+const ADC_MIN_MV: i16 = 15;
 
 const ADC_PINS: &[u32] = &[
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,

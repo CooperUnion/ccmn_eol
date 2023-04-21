@@ -32,7 +32,7 @@ pub fn do_gpio_test() -> anyhow::Result<()> {
         }
 
         let pad = pin.pad();
-        println!("testing pad {pad}");
+        println!("#  testing GPIO {pad}");
         glo_w!(gpio_cmd, Some(pad));
         sleep(Duration::from_millis(50));
 
@@ -41,7 +41,7 @@ pub fn do_gpio_test() -> anyhow::Result<()> {
         if state != desired_state {
             return Err(anyhow!("GPIO state mismatch on pin {pad}:\n desired {desired_state:064b}\n actual  {state:064b}"));
         }
-        println!("pad {pad} ok");
+        println!("#  GPIO {pad} ok");
     }
 
     Ok(())
