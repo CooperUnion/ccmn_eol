@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use atomic::Atomic;
 use ccmn_eol_shared::{atomics::*, gpiotest::EolGpios};
 
-use crate::{opencan::tx::*};
+use crate::{opencan::tx::*, canrx_is_node_ok, canrx};
 
 struct _G {
     gpio_cmd: Atomic<Option<u8>>,
@@ -26,10 +26,10 @@ pub fn do_gpio_test() -> anyhow::Result<()> {
     sleep(Duration::from_secs(1));
 
     for pin in gpios.pins {
-        // if !canrx_is_node_ok!(DUT) {
-        //     dbg!(canrx!(DUT_testStatus));
-        //     return Err(anyhow!("Lost DUT while testing gpio!"));
-        // }
+        if !canrx_is_node_ok!(DUT) {
+            dbg!(canrx!(DUT_testStatus));
+            return Err(anyhow!("Lost DUT while testing gpio!"));
+        }
 
         let pad = pin.pad();
         println!("testing pad {pad}");
@@ -39,7 +39,7 @@ pub fn do_gpio_test() -> anyhow::Result<()> {
         let state = gpios.read_all();
         let desired_state = 1u64 << pad;
         if state != desired_state {
-            return Err(anyhow!("GPIO state mismatch on pin {pad}:\n desired {state:064b}\n actual  {desired_state:064b}"));
+            return Err(anyhow!("GPIO state mismatch on pin {pad}:\n desired {desired_state:064b}\n actual  {state:064b}"));
         }
         println!("pad {pad} ok");
     }
