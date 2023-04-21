@@ -1,13 +1,13 @@
 use std::{thread::sleep, time::Duration};
 
-use ccmn_eol_shared::gpiotest::EolGpios;
+use ccmn_eol_shared::{gpiotest::EolGpios, with_interrupts_disabled};
 use esp_idf_sys::{
     esp, ledc_channel_config, ledc_channel_config_t, ledc_clk_cfg_t_LEDC_AUTO_CLK,
     ledc_mode_t_LEDC_LOW_SPEED_MODE, ledc_timer_config, ledc_timer_config_t,
-    ledc_timer_t_LEDC_TIMER_0, ledc_channel_t_LEDC_CHANNEL_0, ledc_intr_type_t_LEDC_INTR_DISABLE, ledc_timer_bit_t_LEDC_TIMER_13_BIT, ledc_timer_bit_t_LEDC_TIMER_11_BIT, ledc_timer_bit_t_LEDC_TIMER_9_BIT, ledc_timer_bit_t_LEDC_TIMER_8_BIT, ledc_timer_bit_t_LEDC_TIMER_6_BIT,
+    ledc_timer_t_LEDC_TIMER_0, ledc_channel_t_LEDC_CHANNEL_0, ledc_intr_type_t_LEDC_INTR_DISABLE, ledc_timer_bit_t_LEDC_TIMER_6_BIT,
 };
 
-use crate::opencan::tx::*;
+use crate::{opencan::tx::*, canrx};
 
 const ADC_PINS: &[u32] = &[
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
@@ -31,10 +31,13 @@ pub fn do_adc_test() -> anyhow::Result<()> {
         })
     }).unwrap();
 
-    // for &pin in ADC_PINS {
+    for &pin in ADC_PINS {
+        gpios.init();
+        gpios.write_all(0);
+
         esp!(unsafe {
             ledc_channel_config(&ledc_channel_config_t {
-                gpio_num: 1 as _,
+                gpio_num: pin as _,
                 speed_mode: ledc_mode_t_LEDC_LOW_SPEED_MODE,
                 channel: ledc_channel_t_LEDC_CHANNEL_0,
                 intr_type: ledc_intr_type_t_LEDC_INTR_DISABLE,
@@ -46,7 +49,15 @@ pub fn do_adc_test() -> anyhow::Result<()> {
         }).unwrap();
 
         // ok, the pin should be PWMing now.
-    // }
+        // wait for a little bit for the value to update...
+        sleep(Duration::from_millis(200));
+        println!("# Pin {pin}:");
+        dbg!(with_interrupts_disabled! {(
+            canrx!(DUT_adcUniqueness),
+            canrx!(DUT_adcActivePin),
+            canrx!(DUT_adcActiveMillivolts),
+        )});
+    }
 
     println!("# ADC Test Sleep");
     sleep(Duration::from_secs(5));

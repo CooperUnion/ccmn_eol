@@ -70,7 +70,7 @@ extern "C" fn app_main() {
             current_test,
             CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_GPIO_TEST
         );
-        dbg!(do_gpio_test()).ok()
+        dbg!(do_gpio_test()).ok();
 
         glo_w!(
             current_test,
