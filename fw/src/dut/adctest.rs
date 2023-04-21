@@ -124,10 +124,10 @@ pub fn do_adc_test() -> anyhow::Result<()> {
                     unique: data.is_none(),
                     pin,
                     value: val,
-                })
-            }
+                });
 
-            dbg!(data);
+                dbg!(data);
+            }
         }
         glo_w!(adc_data, data);
 
