@@ -67,7 +67,6 @@ impl EolGpios {
         for pin in self.pins {
             let on = (bitmask >> pin.pad() & 1) != 0;
             pin.set(on);
-            // println!("set pin {} to {on}", pin.pad());
         }
     }
 

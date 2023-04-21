@@ -1,9 +1,12 @@
 //! Main entrypoint to the firmware.
 //! `app_main` resets the boot partition to factory and starts ember_tasking.
 //! `app_main` exits and leaves behind the rate tasks to continue running.
-use std::{panic, time::Duration};
+use std::{panic, thread::sleep, time::Duration};
+
+use esp_idf_sys::esp_restart;
 
 use crate::{
+    canrx_is_node_ok,
     ember_tasking::{ember_rate_funcs_S, ember_tasking_begin},
     gpiotest::do_gpio_test,
 };
@@ -41,9 +44,13 @@ extern "C" fn app_main() {
 
         ember_tasking_begin();
 
-        loop {
-            dbg!(do_gpio_test()).ok();
-            std::thread::sleep(Duration::from_secs(1));
+        while !canrx_is_node_ok!(DUT) {
+            sleep(Duration::from_millis(20));
+            println!("waiting for dut...");
         }
+
+        dbg!(do_gpio_test()).ok();
+
+        esp_restart();
     }
 }

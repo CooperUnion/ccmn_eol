@@ -7,11 +7,12 @@ nodes:
         id: 0x80
         cycletime: 5
         signals:
+        - testActive:
+            width: 1
         - currentGpio:
             width: 6
             enumerated_values:
             - NONE: 63
-
 
 - DUT:
     rx:

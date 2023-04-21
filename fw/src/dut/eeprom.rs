@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use atomic::Atomic;
 use ccmn_eol_shared::atomics::*;
 
@@ -16,7 +17,7 @@ static _G: _G = _G {
 };
 
 /// Write and read from the eeprom
-pub fn eeprom_eol_test() {
+pub fn eeprom_eol_test() -> Result<()> {
     unsafe {
         libeeprom::eeprom_init();
         libeeprom::eeprom_write(EEPROM_ADDR, TEST_DATA.as_ptr(), TEST_DATA.len());
@@ -30,9 +31,11 @@ pub fn eeprom_eol_test() {
     if buff.eq(&TEST_DATA) {
         println!("eeprom data: {:?}", std::str::from_utf8(&buff).unwrap());
         glo_w!(test_status, Some(true));
+        Ok(())
     } else {
         println!("Warning: eeprom is not working!");
         glo_w!(test_status, Some(false));
+        Err(anyhow!("EEPROM test fail"))
     }
 }
 

@@ -26,22 +26,28 @@ mod imports {
 
         #[macro_export]
         macro_rules! canrx {
-            ($signal:ident) => {
-                paste::paste! {
+            ($signal:ident) => {{
+                #[allow(unused_unsafe)]
+                let tmp = paste::paste! {
                     unsafe { $crate::opencan::rx::[<CANRX_get_ $signal>]() }
-                }
-            };
+                };
+
+                tmp
+            }};
         }
 
         pub use canrx;
 
         #[macro_export]
         macro_rules! canrx_is_node_ok {
-            ($node:ident) => {
-                paste::paste! {
+            ($node:ident) => {{
+                #[allow(unused_unsafe)]
+                let tmp = paste::paste! {
                     unsafe { $crate::opencan::rx::[<CANRX_is_node_ $node _ok>]() }
-                }
-            };
+                };
+
+                tmp
+            }};
         }
 
         pub use canrx_is_node_ok;
