@@ -50,8 +50,16 @@ nodes:
         id: 0x101
         cycletime: 5
         signals:
-        - adcTestStatus:
+        - adcUniqueness:
             enumerated_values:
             - NONE
-            - NOT_OK
-            - OK
+            - UNIQUE
+            - NOT_UNIQUE
+        - adcActivePin:
+            width: 5
+            enumerated_values:
+            - NONE: 31
+        - adcActiveMillivolts:
+            width: 12
+            enumerated_values:
+            - NONE: 4095

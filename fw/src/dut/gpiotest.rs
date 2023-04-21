@@ -29,5 +29,7 @@ pub fn do_gpio_output_test() -> anyhow::Result<()> {
         sleep(Duration::from_millis(1));
     }
 
+    gpios.set_all_to_input();
+
     Ok(())
 }

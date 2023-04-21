@@ -12,7 +12,12 @@ use esp_idf_sys::{
 };
 
 use crate::{
-    canrx, canrx_is_node_ok, imports::opencan::tx::CAN_Message_DUT_AdcTestStatus, opencan::rx::*,
+    canrx, canrx_is_node_ok,
+    imports::opencan::tx::{
+        CAN_DUT_adcActiveMillivolts, CAN_DUT_adcActivePin, CAN_DUT_adcUniqueness,
+        CAN_Message_DUT_AdcTestStatus,
+    },
+    opencan::rx::*,
 };
 
 const ADC_TOLERANCE_MV: i16 = 10;
@@ -46,12 +51,19 @@ pub const fn pin_to_adc_channel(pin: u32) -> (adc_unit_t, adc_channel_t) {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+struct AdcData {
+    unique: bool,
+    pin: u32,
+    value: i16,
+}
+
 struct _G {
-    adc_value: Atomic<(u32, i16)>,
+    adc_data: Atomic<Option<AdcData>>,
 }
 
 static _G: _G = _G {
-    adc_value: Atomic::<_>::new((0, 0)),
+    adc_data: Atomic::<_>::new(None),
 };
 
 pub fn do_adc_test() -> anyhow::Result<()> {
@@ -80,7 +92,6 @@ pub fn do_adc_test() -> anyhow::Result<()> {
         .collect();
 
     let adc1 = Adc::new_and_init(&adc1_channels, adc_unit_t_ADC_UNIT_1)?;
-
     let adc2 = Adc::new_and_init(&adc2_channels, adc_unit_t_ADC_UNIT_2)?;
 
     loop {
@@ -94,12 +105,33 @@ pub fn do_adc_test() -> anyhow::Result<()> {
 
         dbg!("adc test loop!");
 
-        match canrx!(TESTER_currentGpio) {
-            CAN_TESTER_currentGpio::CAN_TESTER_CURRENTGPIO_NONE => glo_w!(adc_value, (0, 0)),
-            g => glo_w!(adc_value, (g, 0)),
-        };
+        let mut data: Option<AdcData> = None;
 
-        sleep(Duration::from_millis(10));
+        for &pin in ADC_PINS {
+            let (unit, channel) = pin_to_adc_channel(pin);
+
+            #[allow(non_upper_case_globals)]
+            let val = match unit {
+                adc_unit_t_ADC_UNIT_1 => adc1.read(channel),
+                adc_unit_t_ADC_UNIT_2 => adc2.read(channel),
+                _ => panic!("Invalid ADC unit!"),
+            }
+            .unwrap();
+
+            // nonzero ADC reading
+            if val.abs() > ADC_TOLERANCE_MV {
+                data = Some(AdcData {
+                    unique: data.is_none(),
+                    pin,
+                    value: val,
+                })
+            }
+
+            dbg!(data);
+        }
+        glo_w!(adc_data, data);
+
+        sleep(Duration::from_millis(5));
     }
 
     Ok(())
@@ -107,5 +139,22 @@ pub fn do_adc_test() -> anyhow::Result<()> {
 
 #[no_mangle]
 extern "C" fn CANTX_populate_DUT_AdcTestStatus(m: &mut CAN_Message_DUT_AdcTestStatus) {
-    m.DUT_adcTestStatus = 0;
+    let adc_data = glo!(adc_data);
+
+    *m = match adc_data {
+        None => CAN_Message_DUT_AdcTestStatus {
+            DUT_adcUniqueness: CAN_DUT_adcUniqueness::CAN_DUT_ADCUNIQUENESS_NONE,
+            DUT_adcActivePin: CAN_DUT_adcActivePin::CAN_DUT_ADCACTIVEPIN_NONE,
+            DUT_adcActiveMillivolts: CAN_DUT_adcActiveMillivolts::CAN_DUT_ADCACTIVEMILLIVOLTS_NONE,
+        },
+        Some(d) => CAN_Message_DUT_AdcTestStatus {
+            DUT_adcUniqueness: if d.unique {
+                CAN_DUT_adcUniqueness::CAN_DUT_ADCUNIQUENESS_UNIQUE
+            } else {
+                CAN_DUT_adcUniqueness::CAN_DUT_ADCUNIQUENESS_NOT_UNIQUE
+            },
+            DUT_adcActivePin: d.pin as _,
+            DUT_adcActiveMillivolts: d.value as _,
+        },
+    };
 }

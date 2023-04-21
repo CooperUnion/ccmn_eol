@@ -8,6 +8,7 @@ use ccmn_eol_shared::atomics::*;
 use esp_idf_sys::esp_restart;
 
 use crate::{
+    adctest::do_adc_test,
     canrx_is_node_ok,
     ember_tasking::{ember_rate_funcs_S, ember_tasking_begin},
     gpiotest::do_gpio_test,
@@ -75,6 +76,7 @@ extern "C" fn app_main() {
             current_test,
             CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_ADC_TEST
         );
+        dbg!(do_adc_test()).ok();
         sleep(Duration::from_secs(2));
 
         esp_restart();
