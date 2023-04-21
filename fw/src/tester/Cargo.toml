@@ -26,5 +26,7 @@ atomic = "0.5.1"
 
 [package.metadata.esp-idf-sys]
 esp_idf_version = "v5.0.1" # NOTE: keep in sync with pio platform-espressif32 idf version
-esp_idf_components = ["driver"] # speeds up build; add more components as needed
+esp_idf_components = ["driver", "esp_adc"] # speeds up build; add more components as needed
 
+[[package.metadata.esp-idf-sys.extra_components]]
+bindings_header = "extra_bindings.h"

@@ -3,7 +3,10 @@
 //! `app_main` exits and leaves behind the rate tasks to continue running.
 use std::{panic, thread::sleep, time::Duration};
 
-use esp_idf_sys::esp_restart;
+use ccmn_eol_shared::adc::AdcUnit;
+use esp_idf_sys::{
+    adc_channel_t_ADC_CHANNEL_0, adc_channel_t_ADC_CHANNEL_1, adc_unit_t_ADC_UNIT_1, esp_restart,
+};
 
 use crate::{
     canrx, canrx_is_node_ok,
@@ -40,12 +43,20 @@ extern "C" fn app_main() {
 
         ember_tasking_begin();
 
-        while !canrx_is_node_ok!(TESTER) {
-            sleep(Duration::from_millis(20));
-            println!("waiting for tester... {}", canrx!(TESTER_currentGpio));
-        }
+        // while !canrx_is_node_ok!(TESTER) {
+        //     sleep(Duration::from_millis(20));
+        //     println!("waiting for tester... {}", canrx!(TESTER_currentGpio));
+        // }
 
-        dbg!(do_tests()).ok();
+        // dbg!(do_tests()).ok();
+
+        let adc =
+            AdcUnit::new_and_init(&[adc_channel_t_ADC_CHANNEL_1], adc_unit_t_ADC_UNIT_1).unwrap();
+
+        loop {
+            dbg!(adc.read(adc_channel_t_ADC_CHANNEL_1)).ok();
+            sleep(Duration::from_millis(20));
+        }
 
         esp_restart();
     }
