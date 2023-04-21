@@ -26,7 +26,7 @@ pub fn do_gpio_output_test() -> anyhow::Result<()> {
             g => gpios.write_all(1u64 << g),
         };
 
-        sleep(Duration::from_millis(1));
+        sleep(Duration::from_millis(2));
     }
 
     gpios.set_all_to_input();
