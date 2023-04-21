@@ -28,7 +28,6 @@ pub fn do_gpio_test() -> anyhow::Result<()> {
 
     for pin in gpios.pins {
         if !canrx_is_node_ok!(DUT) {
-            dbg!(canrx!(DUT_testStatus));
             return Err(anyhow!("Lost DUT while testing gpio!"));
         }
 

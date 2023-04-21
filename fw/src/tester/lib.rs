@@ -70,6 +70,7 @@ use imports::{ember_tasking, opencan, pins};
 
 mod entry;
 
+mod adctest;
 mod gpiotest;
 mod leds;
 mod state;

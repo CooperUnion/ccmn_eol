@@ -54,6 +54,7 @@ extern "C" fn app_main() {
 fn do_tests() -> anyhow::Result<()> {
     crate::eeprom::eeprom_eol_test()?;
     crate::gpiotest::do_gpio_output_test()?;
+    sleep(Duration::from_secs(1));
     crate::adctest::do_adc_test()?;
 
     Ok(())

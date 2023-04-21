@@ -11,7 +11,9 @@ use esp_idf_sys::{
     adc_unit_t_ADC_UNIT_2,
 };
 
-use crate::{canrx, canrx_is_node_ok, opencan::rx::*};
+use crate::{
+    canrx, canrx_is_node_ok, imports::opencan::tx::CAN_Message_DUT_AdcTestStatus, opencan::rx::*,
+};
 
 const ADC_TOLERANCE_MV: i16 = 10;
 
@@ -90,13 +92,20 @@ pub fn do_adc_test() -> anyhow::Result<()> {
             break;
         }
 
+        dbg!("adc test loop!");
+
         match canrx!(TESTER_currentGpio) {
             CAN_TESTER_currentGpio::CAN_TESTER_CURRENTGPIO_NONE => glo_w!(adc_value, (0, 0)),
             g => glo_w!(adc_value, (g, 0)),
         };
 
-        sleep(Duration::from_millis(1));
+        sleep(Duration::from_millis(10));
     }
 
     Ok(())
+}
+
+#[no_mangle]
+extern "C" fn CANTX_populate_DUT_AdcTestStatus(m: &mut CAN_Message_DUT_AdcTestStatus) {
+    m.DUT_adcTestStatus = 0;
 }

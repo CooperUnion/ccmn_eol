@@ -2,6 +2,7 @@ nodes:
 - TESTER:
     rx:
     - DUT_EepromTestStatus
+    - DUT_AdcTestStatus
     messages:
     - TestCmd:
         id: 0x79
@@ -20,19 +21,37 @@ nodes:
             width: 6
             enumerated_values:
             - NONE: 63
+    - AdcCmd:
+        id: 0x81
+        cycletime: 5
+        signals:
+        - currentAdcPin:
+            width: 5
+            enumerated_values:
+            - NONE: 31
 
 - DUT:
     rx:
     - TESTER_GpioCmd
     - TESTER_TestCmd
+    - TESTER_AdcCmd
     messages:
     - EepromTestStatus:
         id: 0x100
         cycletime: 10
         signals:
-        - testStatus:
+        - eepromTestStatus:
             description: EEPROM self test failed
             enumerated_values:
             - NOT_RUN
             - TEST_PASSED
             - TEST_FAILED
+    - AdcTestStatus:
+        id: 0x101
+        cycletime: 5
+        signals:
+        - adcTestStatus:
+            enumerated_values:
+            - NONE
+            - NOT_OK
+            - OK

@@ -55,9 +55,14 @@ extern "C" fn app_main() {
 
         ember_tasking_begin();
 
+        // wait for a DUT power cycle
+        while canrx_is_node_ok!(DUT) {
+            sleep(Duration::from_millis(20));
+            println!("waiting for dut to reboot...");
+        }
         while !canrx_is_node_ok!(DUT) {
             sleep(Duration::from_millis(20));
-            println!("waiting for dut...");
+            println!("waiting for dut to start up again...");
         }
 
         glo_w!(
@@ -65,6 +70,12 @@ extern "C" fn app_main() {
             CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_GPIO_TEST
         );
         dbg!(do_gpio_test()).ok();
+
+        glo_w!(
+            current_test,
+            CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_ADC_TEST
+        );
+        sleep(Duration::from_secs(2));
 
         esp_restart();
     }
