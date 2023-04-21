@@ -63,7 +63,7 @@ impl EolGpios {
     }
 
     pub fn write_all(&self, bitmask: u64) {
-        println!("writing bitmask {bitmask:064b}");
+        // println!("# writing GPIO {bitmask:050b}");
         for pin in self.pins {
             let on = (bitmask >> pin.pad() & 1) != 0;
             pin.set(on);

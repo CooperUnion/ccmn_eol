@@ -67,6 +67,7 @@ static _G: _G = _G {
 };
 
 pub fn do_adc_test() -> anyhow::Result<()> {
+    println!("# DUT ADC Test Start");
     let adc1_channels: Vec<u32> = ADC_PINS
         .iter()
         .filter_map(|&p| {
@@ -103,8 +104,6 @@ pub fn do_adc_test() -> anyhow::Result<()> {
             break;
         }
 
-        dbg!("adc test loop!");
-
         let mut data: Option<AdcData> = None;
 
         for &pin in ADC_PINS {
@@ -125,14 +124,14 @@ pub fn do_adc_test() -> anyhow::Result<()> {
                     pin,
                     value: val,
                 });
-
-                dbg!(data);
             }
         }
         glo_w!(adc_data, data);
 
         sleep(Duration::from_millis(5));
     }
+
+    println!("# DUT ADC Test End");
 
     Ok(())
 }

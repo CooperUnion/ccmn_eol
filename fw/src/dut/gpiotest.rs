@@ -7,6 +7,7 @@ use ccmn_eol_shared::gpiotest::EolGpios;
 use crate::{canrx, canrx_is_node_ok};
 
 pub fn do_gpio_output_test() -> anyhow::Result<()> {
+    println!("# DUT GPIO Test Start");
     let gpios = EolGpios::new();
     gpios.init();
     gpios.set_all_to_output();
@@ -31,5 +32,6 @@ pub fn do_gpio_output_test() -> anyhow::Result<()> {
 
     gpios.set_all_to_input();
 
+    println!("# DUT GPIO Test End");
     Ok(())
 }

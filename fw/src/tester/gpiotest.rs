@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use atomic::Atomic;
 use ccmn_eol_shared::{atomics::*, gpiotest::EolGpios};
 
-use crate::{canrx, canrx_is_node_ok, opencan::tx::*};
+use crate::{canrx_is_node_ok, opencan::tx::*};
 
 struct _G {
     gpio_cmd: Atomic<Option<u8>>,
@@ -23,7 +23,7 @@ pub fn do_gpio_test() -> anyhow::Result<()> {
 
     glo_w!(gpio_cmd, None);
 
-    // wait for a while for DUT to be up
+    // wait for a while for DUT to be ready
     sleep(Duration::from_secs(1));
 
     for pin in gpios.pins {
@@ -34,7 +34,7 @@ pub fn do_gpio_test() -> anyhow::Result<()> {
         let pad = pin.pad();
         println!("testing pad {pad}");
         glo_w!(gpio_cmd, Some(pad));
-        sleep(Duration::from_millis(20));
+        sleep(Duration::from_millis(50));
 
         let state = gpios.read_all();
         let desired_state = 1u64 << pad;

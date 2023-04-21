@@ -70,14 +70,18 @@ extern "C" fn app_main() {
             current_test,
             CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_GPIO_TEST
         );
-        dbg!(do_gpio_test()).ok();
+        dbg!(do_gpio_test()).ok()
 
         glo_w!(
             current_test,
             CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_ADC_TEST
         );
         dbg!(do_adc_test()).ok();
-        sleep(Duration::from_secs(2));
+        glo_w!(
+            current_test,
+            CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_NONE
+        );
+        sleep(Duration::from_secs(1));
 
         esp_restart();
     }
