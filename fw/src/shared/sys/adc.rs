@@ -8,18 +8,19 @@ use esp_idf_sys::{
     adc_ulp_mode_t_ADC_ULP_MODE_DISABLE, adc_unit_t, esp, EspError,
     ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED,
 };
+use static_assertions::const_assert_eq;
 
 #[derive(Debug)]
-pub struct AdcUnit {
+pub struct Adc {
     handle: adc_oneshot_unit_handle_t,
     cali_handle: adc_cali_handle_t,
 }
 
-impl AdcUnit {
-    /// New ADC unit.
+impl Adc {
+    /// New ADC.
     ///
     /// Initializes, configures, and makes calibration scheme.
-    pub fn new_and_init(channels: &[adc_channel_t], unit: adc_unit_t) -> Result<AdcUnit, EspError> {
+    pub fn new_and_init(channels: &[adc_channel_t], unit: adc_unit_t) -> Result<Adc, EspError> {
         // ADC init
         let init_cfg = adc_oneshot_unit_init_cfg_t {
             unit_id: unit,
@@ -46,8 +47,8 @@ impl AdcUnit {
         }
 
         // ADC calibration init
-        // check that we use curve fitting (define below is available)
-        const _: u32 = ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED;
+        // check that we use curve fittin
+        const_assert_eq!(ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED, 1);
 
         let mut cali_handle: adc_cali_handle_t = ptr::null_mut();
         esp!(unsafe {

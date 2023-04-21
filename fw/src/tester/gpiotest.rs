@@ -8,12 +8,10 @@ use crate::{canrx, canrx_is_node_ok, opencan::tx::*};
 
 struct _G {
     gpio_cmd: Atomic<Option<u8>>,
-    test_active: Atomic<bool>,
 }
 
 static _G: _G = _G {
     gpio_cmd: Atomic::<_>::new(None),
-    test_active: Atomic::<_>::new(false),
 };
 
 pub fn do_gpio_test() -> anyhow::Result<()> {
@@ -24,7 +22,6 @@ pub fn do_gpio_test() -> anyhow::Result<()> {
     gpios.set_all_to_input();
 
     glo_w!(gpio_cmd, None);
-    glo_w!(test_active, true);
 
     // wait for a while for DUT to be up
     sleep(Duration::from_secs(1));
@@ -48,8 +45,6 @@ pub fn do_gpio_test() -> anyhow::Result<()> {
         println!("pad {pad} ok");
     }
 
-    glo_w!(test_active, false);
-
     Ok(())
 }
 
@@ -59,5 +54,4 @@ extern "C" fn CANTX_populate_TESTER_GpioCmd(m: &mut CAN_Message_TESTER_GpioCmd) 
         None => CAN_TESTER_currentGpio::CAN_TESTER_CURRENTGPIO_NONE,
         Some(g) => g.into(),
     };
-    m.TESTER_testActive = glo!(test_active) as _;
 }

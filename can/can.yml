@@ -3,12 +3,19 @@ nodes:
     rx:
     - DUT_EepromTestStatus
     messages:
+    - TestCmd:
+        id: 0x79
+        cycletime: 5
+        signals:
+         - currentTest:
+            enumerated_values:
+            - NONE
+            - ADC_TEST
+            - GPIO_TEST
     - GpioCmd:
         id: 0x80
         cycletime: 5
         signals:
-        - testActive:
-            width: 1
         - currentGpio:
             width: 6
             enumerated_values:
@@ -17,6 +24,7 @@ nodes:
 - DUT:
     rx:
     - TESTER_GpioCmd
+    - TESTER_TestCmd
     messages:
     - EepromTestStatus:
         id: 0x100

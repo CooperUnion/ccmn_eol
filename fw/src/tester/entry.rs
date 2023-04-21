@@ -3,12 +3,15 @@
 //! `app_main` exits and leaves behind the rate tasks to continue running.
 use std::{panic, thread::sleep, time::Duration};
 
+use atomic::Atomic;
+use ccmn_eol_shared::atomics::*;
 use esp_idf_sys::esp_restart;
 
 use crate::{
     canrx_is_node_ok,
     ember_tasking::{ember_rate_funcs_S, ember_tasking_begin},
     gpiotest::do_gpio_test,
+    opencan::tx::*,
 };
 
 // some extern declarations
@@ -24,6 +27,14 @@ static ember_task_list: [&ember_rate_funcs_S; 2] = [unsafe { &can_rf }, &crate::
 
 #[no_mangle]
 static ember_task_count: usize = ember_task_list.len();
+
+struct _G {
+    current_test: Atomic<CAN_TESTER_currentTest::Type>,
+}
+
+static _G: _G = _G {
+    current_test: Atomic::<_>::new(CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_NONE),
+};
 
 // app_main
 #[no_mangle]
@@ -49,8 +60,17 @@ extern "C" fn app_main() {
             println!("waiting for dut...");
         }
 
+        glo_w!(
+            current_test,
+            CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_GPIO_TEST
+        );
         dbg!(do_gpio_test()).ok();
 
         esp_restart();
     }
+}
+
+#[no_mangle]
+extern "C" fn CANTX_populate_TESTER_TestCmd(m: &mut CAN_Message_TESTER_TestCmd) {
+    m.TESTER_currentTest = glo!(current_test);
 }
