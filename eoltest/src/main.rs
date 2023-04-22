@@ -1,4 +1,3 @@
-use cfg_if::cfg_if;
 use tracing::{error, info, Level};
 use tracing_subscriber::FmtSubscriber;
 
@@ -6,7 +5,7 @@ use std::process::exit;
 
 mod esp32;
 
-cfg_if! {
+cfg_if::cfg_if! {
     if #[cfg(not(target_os = "macos"))] {
         use instekgpp::InstekGpp;
         mod power;

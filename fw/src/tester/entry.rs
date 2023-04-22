@@ -5,8 +5,8 @@ use std::{panic, thread::sleep, time::Duration};
 
 use atomic::Atomic;
 use ccmn_eol_shared::atomics::*;
+use eol_shared::TestResults;
 use esp_idf_sys::esp_restart;
-use serde::Serialize;
 
 use crate::{
     adctest::do_adc_test,
@@ -37,13 +37,6 @@ struct _G {
 static _G: _G = _G {
     current_test: Atomic::<_>::new(CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_NONE),
 };
-
-#[derive(Serialize, Debug)]
-struct TestResults {
-    gpio_result: bool,
-    adc_result: Option<(u32, i32)>,
-    eeprom_result: u8,
-}
 
 // app_main
 #[no_mangle]
