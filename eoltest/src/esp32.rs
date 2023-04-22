@@ -43,7 +43,7 @@ impl EolTest {
             exit(-1);
         }
 
-        info!("Flashed esp32. Please press reset button.");
+        info!("Flashed esp32. Please press reset button if lights are off.");
     }
 
     fn wait_for_esp32(&self, time: Duration) -> Result<String> {
@@ -54,12 +54,18 @@ impl EolTest {
                 .map_err(|e| anyhow!("Error finding available serial ports: {e}"))?
             {
                 let SerialPortType::UsbPort(port) = dev.port_type else {
-                continue;
-            };
+                    continue;
+                };
 
                 let Some(product) = port.product else {
-                continue;
-            };
+                    continue;
+                };
+
+                let normalized_dev_name = dev.port_name.replace("tty.usb", "cu.usb");
+                let normalized_tester_name = self.tester.name().unwrap().replace("tty.usb", "cu.usb");
+                if normalized_dev_name == normalized_tester_name {
+                    continue; // skip the tester
+                }
 
                 if product == "USB JTAG_serial debug unit" {
                     return Ok(dev.port_name);

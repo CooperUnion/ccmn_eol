@@ -5,7 +5,7 @@ use std::{panic, thread::sleep, time::Duration};
 
 use atomic::Atomic;
 use ccmn_eol_shared::atomics::*;
-use eol_shared::TestResults;
+use eol_shared::{TEST_RESULT_START_MAGIC, TestResults};
 use esp_idf_sys::esp_restart;
 
 use crate::{
@@ -92,7 +92,7 @@ extern "C" fn app_main() {
             eeprom_result: eeprom_result as _,
         };
 
-        println!("$#$#$ {}", serde_json::to_string(&results).unwrap());
+        println!("{TEST_RESULT_START_MAGIC} {}", serde_json::to_string(&results).unwrap());
 
         println!("TEST END! Results: {results:#?}");
 

@@ -1,9 +1,12 @@
-use tracing::{error, info, Level};
+use clap::Parser;
+use serialport::SerialPort;
+use tracing::{error, info, warn, Level};
 use tracing_subscriber::FmtSubscriber;
 
-use std::process::exit;
+use std::{process::exit, thread::sleep, time::Duration};
 
 mod esp32;
+mod tester;
 
 cfg_if::cfg_if! {
     if #[cfg(not(target_os = "macos"))] {
@@ -12,13 +15,19 @@ cfg_if::cfg_if! {
     }
 }
 
+#[derive(clap::Parser)]
+struct Args {
+    tester_port: String,
+}
+
 struct EolTest {
     #[cfg(not(target_os = "macos"))]
     psu: InstekGpp,
+    tester: Box<dyn SerialPort>,
 }
 
 impl EolTest {
-    fn main() {
+    fn main() -> ! {
         let subscriber = FmtSubscriber::builder()
             .with_max_level(Level::TRACE)
             .finish();
@@ -26,7 +35,12 @@ impl EolTest {
         tracing::subscriber::set_global_default(subscriber)
             .expect("setting default subscriber failed");
 
+        let args = Args::parse();
+
         info!("CCMN EOL Test ----");
+
+        // try to open tester port
+        let tester = serialport::new(args.tester_port, 115200).open().unwrap();
 
         #[cfg(not(target_os = "macos"))]
         let psu = power::prepare_psu();
@@ -34,9 +48,49 @@ impl EolTest {
         #[cfg(not(target_os = "macos"))]
         let mut eol = EolTest { psu };
         #[cfg(target_os = "macos")]
-        let mut eol = EolTest {};
+        let mut eol = EolTest { tester };
 
         eol.prepare_esp32();
+
+        info!("Waiting for 10 seconds...");
+        sleep(Duration::from_secs(10));
+
+        let results = loop {
+            match eol.get_test_result() {
+                Ok(res) => break res,
+                Err(e) => {
+                    warn!("Error getting test results: {e} Trying again.");
+                    continue;
+                }
+            }
+        };
+
+        info!("Got test results.");
+        dbg!(&results);
+        match results.gpio_result {
+            true => info!("GPIO test PASS."),
+            false => error!("!!! GPIO test FAIL!"),
+        };
+
+        match results.adc_result {
+            Some((_pin, tol)) => info!("ADC test PASS. Largest tolerance was {} mV", tol.abs()),
+            None => error!("!!! ADC test FAIL!"),
+        };
+
+        match results.eeprom_result {
+            0 => error!("!!! EEPROM test NOT RUN!"),
+            1 => info!("EEPROM test PASS."),
+            2 => error!("!!! EEPROM test FAIL"),
+            _ => panic!("Unexpected value for eeprom_result."),
+        };
+
+        if results.gpio_result && results.adc_result.is_some() && results.eeprom_result == 1 {
+            info!("*** BOARD PASS ***");
+            exit(0);
+        } else {
+            error!("*** BOARD FAIL ***");
+            exit(-1);
+        }
 
         // Tests:
         // 1. Power OK on 3v3, 5V
