@@ -45,7 +45,7 @@ extern "C" fn app_main() {
             println!("waiting for tester... {}", canrx!(TESTER_currentTest));
         }
 
-        dbg!(do_tests()).ok();
+        do_tests();
 
         sleep(Duration::from_secs(1));
 
@@ -53,17 +53,16 @@ extern "C" fn app_main() {
     }
 }
 
-fn do_tests() -> anyhow::Result<()> {
-    crate::eeprom::eeprom_eol_test()?;
+fn do_tests() {
+    dbg!(crate::eeprom::eeprom_eol_test()).ok();
+
     while !canrx_is_node_ok!(TESTER) || canrx!(TESTER_currentTest) != CAN_TESTER_CURRENTTEST_GPIO_TEST {
         sleep(Duration::from_millis(10));
     }
-    crate::gpiotest::do_gpio_output_test()?;
+    dbg!(crate::gpiotest::do_gpio_output_test()).ok();
 
     while !canrx_is_node_ok!(TESTER) || canrx!(TESTER_currentTest) != CAN_TESTER_CURRENTTEST_ADC_TEST {
         sleep(Duration::from_millis(10));
     }
-    crate::adctest::do_adc_test()?;
-
-    Ok(())
+    dbg!(crate::adctest::do_adc_test()).ok();
 }

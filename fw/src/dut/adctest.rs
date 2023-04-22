@@ -118,7 +118,7 @@ pub fn do_adc_test() -> anyhow::Result<()> {
             .unwrap();
 
             // nonzero ADC reading
-            if val.abs() > ADC_TOLERANCE_MV {
+            if val.abs() > ADC_MIN_MV {
                 data = Some(AdcData {
                     unique: data.is_none(),
                     pin,

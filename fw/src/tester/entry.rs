@@ -6,13 +6,14 @@ use std::{panic, thread::sleep, time::Duration};
 use atomic::Atomic;
 use ccmn_eol_shared::atomics::*;
 use esp_idf_sys::esp_restart;
+use serde::Serialize;
 
 use crate::{
     adctest::do_adc_test,
     canrx_is_node_ok,
     ember_tasking::{ember_rate_funcs_S, ember_tasking_begin},
     gpiotest::do_gpio_test,
-    opencan::tx::*,
+    opencan::tx::*, canrx,
 };
 
 // some extern declarations
@@ -36,6 +37,13 @@ struct _G {
 static _G: _G = _G {
     current_test: Atomic::<_>::new(CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_NONE),
 };
+
+#[derive(Serialize, Debug)]
+struct TestResults {
+    gpio_result: bool,
+    adc_result: Option<(u32, i32)>,
+    eeprom_result: u8,
+}
 
 // app_main
 #[no_mangle]
@@ -70,18 +78,32 @@ extern "C" fn app_main() {
             current_test,
             CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_GPIO_TEST
         );
-        dbg!(do_gpio_test()).ok();
+        let gpio_result = do_gpio_test();
 
         glo_w!(
             current_test,
             CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_ADC_TEST
         );
-        dbg!(do_adc_test()).ok();
+        let adc_result = do_adc_test();
+
         glo_w!(
             current_test,
             CAN_TESTER_currentTest::CAN_TESTER_CURRENTTEST_NONE
         );
-        sleep(Duration::from_secs(1));
+
+        let eeprom_result = canrx!(DUT_eepromTestStatus);
+
+        let results = TestResults {
+            gpio_result: if gpio_result.is_err() { false } else { true },
+            adc_result: adc_result.ok(),
+            eeprom_result: eeprom_result as _,
+        };
+
+        println!("$#$#$ {}", serde_json::to_string(&results).unwrap());
+
+        println!("TEST END! Results: {results:#?}");
+
+        sleep(Duration::from_secs(3));
 
         esp_restart();
     }
