@@ -5,15 +5,11 @@ use std::{
 
 use anyhow::Result;
 use eol_shared::{TestResults, TEST_RESULT_START_MAGIC};
-use serialport::SerialPort;
-use tracing::info;
 
 use crate::EolTest;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Error reading from tester: {0}")]
-    ReadError(String),
     #[error("Invalid TestResults serialization: got \"{0}\"")]
     InvalidTestResultsString(String),
     #[error("Timed out waiting for TestResults")]
@@ -33,12 +29,13 @@ impl EolTest {
 
         let mut got_first = false;
 
-        while start.elapsed() < Duration::from_secs(10) {
+        while start.elapsed() < Duration::from_secs(15) {
             let mut line = String::new();
-            port_op!(reader.read_line(&mut line), ReadError)?;
-            info!("Tester output::| {}", line.trim());
+
+            reader.read_line(&mut line).ok();
             if let Some(results) = line.strip_prefix(TEST_RESULT_START_MAGIC) {
-                if !got_first { // skip the first result
+                if !got_first {
+                    // skip the first result
                     got_first = true;
                     continue;
                 }

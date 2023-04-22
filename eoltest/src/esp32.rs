@@ -13,7 +13,7 @@ use tracing::{error, info};
 use crate::EolTest;
 
 impl EolTest {
-    pub fn prepare_esp32(&mut self) {
+    pub fn find_esp32(&mut self) -> String {
         info!("Waiting for ESP32 JTAG/serial device...");
 
         let dev = match self.wait_for_esp32(Duration::from_secs(5)) {
@@ -25,6 +25,15 @@ impl EolTest {
         };
 
         info!("Found esp32 at {dev}");
+
+        dev
+    }
+
+    pub fn prepare_esp32(&mut self) {
+        info!("Waiting for ESP32 JTAG/serial device...");
+
+        let dev = self.find_esp32();
+
         info!("Flashing target {dev} using esptool...");
         let output = match self.flash_esp32(&dev) {
             Ok(o) => o,
@@ -62,7 +71,8 @@ impl EolTest {
                 };
 
                 let normalized_dev_name = dev.port_name.replace("tty.usb", "cu.usb");
-                let normalized_tester_name = self.tester.name().unwrap().replace("tty.usb", "cu.usb");
+                let normalized_tester_name =
+                    self.tester.name().unwrap().replace("tty.usb", "cu.usb");
                 if normalized_dev_name == normalized_tester_name {
                     continue; // skip the tester
                 }
@@ -101,5 +111,45 @@ impl EolTest {
                 .split_ascii_whitespace(),
             )
             .output()
+    }
+
+    pub fn erase_flash(&mut self) -> io::Result<Output> {
+        let dev = self.find_esp32();
+
+        info!("Erasing flash using esptool...");
+        Command::new("esptool.py")
+            .args(
+                formatdoc! {"
+                --chip esp32s3
+                --port {dev}
+                erase_flash"
+                }
+                .split_ascii_whitespace(),
+            )
+            .output()
+    }
+
+    pub fn get_efuse_json(&mut self) -> io::Result<String> {
+        let dev = self.find_esp32();
+
+        info!("Reading efuses using espefuse...");
+        Command::new("espefuse.py")
+            .args(
+                formatdoc! {"
+                    --chip esp32s3
+                    summary
+                    --port {dev}
+                    --format json"
+                }
+                .split_ascii_whitespace(),
+            )
+            .output()
+            .map(|o| {
+                String::from_utf8_lossy(&o.stdout)
+                    .into_owned()
+                    .lines()
+                    .skip(4) // skip the beginning part of the output before the json starts
+                    .collect()
+            })
     }
 }

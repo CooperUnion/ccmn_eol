@@ -1,9 +1,15 @@
 use clap::Parser;
+use serde::Serialize;
 use serialport::SerialPort;
 use tracing::{error, info, warn, Level};
 use tracing_subscriber::FmtSubscriber;
 
-use std::{process::exit, thread::sleep, time::Duration};
+use std::{
+    fs::{self},
+    process::exit,
+    thread::sleep,
+    time::Duration,
+};
 
 mod esp32;
 mod tester;
@@ -17,7 +23,10 @@ cfg_if::cfg_if! {
 
 #[derive(clap::Parser)]
 struct Args {
+    #[clap(long)]
     tester_port: String,
+    #[clap(long)]
+    serial_number: String,
 }
 
 struct EolTest {
@@ -46,14 +55,14 @@ impl EolTest {
         let psu = power::prepare_psu();
 
         #[cfg(not(target_os = "macos"))]
-        let mut eol = EolTest { psu };
+        let mut eol = EolTest { psu, tester };
         #[cfg(target_os = "macos")]
         let mut eol = EolTest { tester };
 
         eol.prepare_esp32();
 
-        info!("Waiting for 10 seconds...");
-        sleep(Duration::from_secs(10));
+        info!("Waiting for 5 seconds...");
+        sleep(Duration::from_secs(5));
 
         let results = loop {
             match eol.get_test_result() {
@@ -66,7 +75,7 @@ impl EolTest {
         };
 
         info!("Got test results.");
-        dbg!(&results);
+
         match results.gpio_result {
             true => info!("GPIO test PASS."),
             false => error!("!!! GPIO test FAIL!"),
@@ -85,11 +94,71 @@ impl EolTest {
         };
 
         if results.gpio_result && results.adc_result.is_some() && results.eeprom_result == 1 {
+            info!("Erasing flash...");
+            if let Err(e) = eol.erase_flash() {
+                error!("Error erasing flash: {e}");
+                eol.fail_test();
+            }
+
+            info!("Getting efuse information...");
+            let efuse_json = match eol.get_efuse_json() {
+                Ok(j) => j,
+                Err(e) => {
+                    error!("Error getting efuse data: {e}");
+                    eol.fail_test();
+                }
+            };
+
+            let efuse_data: serde_json::Value = serde_json::from_str(&efuse_json).unwrap();
+
+            let mac = efuse_data["MAC"]["value"].to_string();
+            let mac = mac
+                .strip_prefix('\"')
+                .unwrap()
+                .strip_suffix(" (OK)\"")
+                .unwrap()
+                .to_string()
+                .replace(':', "");
+
+            let results_dir = std::path::Path::new("results");
+
+            if !results_dir.exists() {
+                fs::create_dir(results_dir).unwrap();
+            }
+
+            let filename =
+                results_dir.join(format!("serial_{}_mac_{mac}.json", args.serial_number));
+            if filename.exists() {
+                error!("Test result file for this serial number and mac already exists!!!");
+                exit(-1);
+            }
+            #[derive(Serialize)]
+            struct EolData {
+                serial: String,
+                time: String,
+                adc_largest_tolerance: (u32, i32),
+                efuse_data: serde_json::Value,
+            }
+
+            info!("Saving data to {}...", filename.display());
+
+            fs::write(
+                filename,
+                serde_json::to_string_pretty(&EolData {
+                    serial: args.serial_number,
+                    time: chrono::Utc::now().to_string(),
+                    adc_largest_tolerance: results.adc_result.unwrap(),
+                    efuse_data,
+                })
+                .unwrap(),
+            )
+            .unwrap();
+
             info!("*** BOARD PASS ***");
             exit(0);
         } else {
             error!("*** BOARD FAIL ***");
-            exit(-1);
+            eol.fail_test();
         }
 
         // Tests:
