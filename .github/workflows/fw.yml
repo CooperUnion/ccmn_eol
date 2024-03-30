@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - id: skip_check
-        uses: fkirc/skip-duplicate-actions@v5.3.0
+        uses: fkirc/skip-duplicate-actions@v5.3.1
 
   build:
     needs: pre_job
@@ -20,35 +20,20 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Cache build/
-        id: cache-build-dir
-        uses: actions/cache@v3
-        with:
-          path: build
-          key: build_cache
-
-      - name: Cache deps/
-        id: cache-deps-dir
-        uses: actions/cache@v3
-        with:
-          path: deps
-          key: deps_cache
-
-      - name: Cache .sconsign.dblite
-        id: cache-sconsign
-        uses: actions/cache@v3
-        with:
-          path: .sconsign.dblite
-          key: sconsign_cache
 
       - name: Set up Python
         run: |
           sudo apt-get update -yqq
           sudo apt-get install python3 python3-pip python3-venv -yqq
+
+      - name: Get x86 libraries
+        run: sudo apt-get install gcc-multilib -yqq
+
+      - name: Install PlatformIO
+        run: sudo pip install --upgrade platformio
 
       - name: Install scons
         run: pip install scons
@@ -63,7 +48,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: can-dbc
-          path: build/can/fsae_can.dbc
+          path: build/can/eol_can.dbc
 
       - name: Upload OpenCAN Codegen Artifacts
         uses: actions/upload-artifact@v3

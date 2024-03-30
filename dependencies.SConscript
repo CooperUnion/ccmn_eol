@@ -6,8 +6,8 @@ import os
 Import("env")
 
 # VERSIONS ------------------------------------------------
-env['ESP_RUST_VERSION'] = '1.69.0.0'
-env['RUST_VERSION']     = '1.68.2'
+env['ESP_RUST_VERSION'] = '1.70.0.0'
+env['RUST_VERSION']     = '1.70.0'
 env['OPENCAN_VERSION']  = 'b014266'
 # ---------------------------------------------------------
 
@@ -87,7 +87,7 @@ env['ESPUP'] = RUST_TOOLS_PATH.File('espup')
 espup_install_builder = env.Command(
   env['ESPUP'],
   env['CARGO'],
-  '$CARGO install espup'
+  '$CARGO install espup@0.8.0 --locked'
 )
 
 ESP_RUST_PATH     = env.Dir(env['ENV']['RUSTUP_HOME']).Dir('toolchains/espr')
@@ -104,7 +104,7 @@ esp_rust_install_builder = env.Command(
 # Update these as needed from esp-env.sh
 env.PrependENVPath('PATH', ESP_RUST_PATH.Dir('xtensa-esp32s3-elf/esp-2021r2-patch5-8_4_0/xtensa-esp32s3-elf/bin'))
 env.PrependENVPath('PATH', ESP_RUST_PATH.Dir('riscv32-esp-elf/esp-2021r2-patch5-8_4_0/riscv32-esp-elf/bin'))
-env['ENV']['LIBCLANG_PATH'] = ESP_RUST_PATH.Dir('xtensa-esp32-elf-clang/esp-15.0.0-20221201/esp-clang/lib').abspath
+env['ENV']['LIBCLANG_PATH'] = ESP_RUST_PATH.Dir('xtensa-esp32-elf-clang/esp-16.0.0-20230516/esp-clang/lib').abspath
 
 env.Alias('deps-esp-rust', esp_rust_install_builder)
 # ---------------------------------------------------------

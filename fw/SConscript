@@ -8,7 +8,7 @@ flags_opt = AddOption('--pioflags',
     help='PlatformIO environment'
 )
 env['AddHelp']("fw --pioflags=FLAGS",
-               'Run pio for fw/ with FLAGS, e.g. `scons fw --pioflags="run -t dut"`')
+               'Run pio for fw/ with FLAGS, e.g. `scons fw --pioflags="run -e dut"`')
 
 pioflags = GetOption('pioflags')
 command = None
@@ -17,14 +17,21 @@ if pioflags is None:
 else:
     command = f'pio {pioflags} -d fw'
 
-[pio_builder] = env.Command(
+env_pio_builder = env.Clone()
+
+[pio_builder] = env_pio_builder.Command(
     env.Dir('.'),
     [],
     command
 )
-env.AlwaysBuild(pio_builder)
-env.Depends(pio_builder, env['PIP_PACKAGES'])
-env.Depends(pio_builder, env['ESP_CARGO'])
+
+env_pio_builder["ENV"]["PATH"] = ":".join(list(filter(lambda x: env["ENV"]["VIRTUAL_ENV"] not in x, env["ENV"]["PATH"].split(":"))))
+
+print(env_pio_builder["ENV"])
+
+env_pio_builder.AlwaysBuild(pio_builder)
+env_pio_builder.Depends(pio_builder, env['PIP_PACKAGES'])
+env_pio_builder.Depends(pio_builder, env['ESP_CARGO'])
 
 env.Alias('fw', pio_builder)
 env['AddHelp']('fw', 'Build fw')

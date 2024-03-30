@@ -7,6 +7,7 @@ use anyhow::Result;
 use eol_shared::{TestResults, TEST_RESULT_START_MAGIC};
 
 use crate::EolTest;
+use tracing::debug;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -33,6 +34,9 @@ impl EolTest {
             let mut line = String::new();
 
             reader.read_line(&mut line).ok();
+            if line != "" {
+                debug!("DUT: {line}");
+            }
             if let Some(results) = line.strip_prefix(TEST_RESULT_START_MAGIC) {
                 if !got_first {
                     // skip the first result

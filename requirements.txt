@@ -1,2 +1,3 @@
 cantools==38.0.2
 platformio==6.1.6
+setuptools

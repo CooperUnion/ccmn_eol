@@ -70,14 +70,30 @@ impl EolTest {
                     continue;
                 };
 
+                #[cfg(target_os = "macos")]
                 let normalized_dev_name = dev.port_name.replace("tty.usb", "cu.usb");
+                #[cfg(target_os = "linux")]
+                let normalized_dev_name = dev.port_name.clone();
+
+                #[cfg(target_os = "macos")]
                 let normalized_tester_name =
                     self.tester.name().unwrap().replace("tty.usb", "cu.usb");
+                #[cfg(target_os = "linux")]
+                let normalized_tester_name = self.tester.name().unwrap();
+
                 if normalized_dev_name == normalized_tester_name {
                     continue; // skip the tester
                 }
 
-                if product == "USB JTAG_serial debug unit" {
+                #[cfg(target_os = "macos")]
+                let expected_product_name = "USB JTAG_serial debug unit";
+
+                #[cfg(target_os = "linux")]
+                let expected_product_name = "USB_JTAG_serial_debug_unit";
+
+                debug!("checking device with product name ${product}");
+
+                if product == expected_product_name {
                     return Ok(dev.port_name);
                 }
             }

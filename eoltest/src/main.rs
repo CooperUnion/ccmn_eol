@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{ArgAction, Parser};
 use serde::Serialize;
 use serialport::SerialPort;
 use tracing::{error, info, warn, Level};
@@ -7,8 +7,6 @@ use tracing_subscriber::FmtSubscriber;
 use std::{
     fs::{self},
     process::exit,
-    thread::sleep,
-    time::Duration,
 };
 
 mod esp32;
@@ -23,10 +21,12 @@ cfg_if::cfg_if! {
 
 #[derive(clap::Parser)]
 struct Args {
-    #[clap(long)]
+    #[clap(long, short)]
     tester_port: String,
     #[clap(long)]
     serial_number: String,
+    #[clap(long, short, action=ArgAction::SetTrue)]
+    skip_flashing: bool,
 }
 
 struct EolTest {
@@ -59,10 +59,11 @@ impl EolTest {
         #[cfg(target_os = "macos")]
         let mut eol = EolTest { tester };
 
-        eol.prepare_esp32();
-
-        info!("Waiting for 5 seconds...");
-        sleep(Duration::from_secs(5));
+        if args.skip_flashing {
+            info!("Skip flashing DUT");
+        } else {
+            eol.prepare_esp32();
+        }
 
         let results = loop {
             match eol.get_test_result() {

@@ -1,5 +1,6 @@
 [workspace]
 members = ["src/dut", "src/tester", "src/shared"]
+resolver = "1"
 
 [patch.crates-io]
 # issue with lstat patch; will file esp-idf-sys issue, use my patch for now:
