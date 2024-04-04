@@ -8,7 +8,7 @@ use std::{
 use anyhow::{anyhow, Result};
 use indoc::formatdoc;
 use serialport::SerialPortType;
-use tracing::{error, info};
+use tracing::{error, info, debug};
 
 use crate::EolTest;
 
