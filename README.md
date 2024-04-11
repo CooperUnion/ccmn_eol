@@ -21,8 +21,11 @@ this is `sudo dnf install libudev-devel`).
 #### TL;DR
 
 ```bash
+# Make sure to update & initialize submodules
+git submodule update --init --recursive
+
 # Set up and compile
-scons
+scons fw
 
 # Compile eoltest
 (cd "eoltest" && cargo build)
