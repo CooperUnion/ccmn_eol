@@ -25,9 +25,6 @@ this is `sudo dnf install libudev-devel`).
 git submodule update --init --recursive
 
 # Set up and compile
-scons
-
-# To build fw
 scons fw
 
 # Compile eoltest
