@@ -27,8 +27,6 @@ env_pio_builder = env.Clone()
 
 env_pio_builder["ENV"]["PATH"] = ":".join(list(filter(lambda x: env["ENV"]["VIRTUAL_ENV"] not in x, env["ENV"]["PATH"].split(":"))))
 
-print(env_pio_builder["ENV"])
-
 env_pio_builder.AlwaysBuild(pio_builder)
 env_pio_builder.Depends(pio_builder, env['PIP_PACKAGES'])
 env_pio_builder.Depends(pio_builder, env['ESP_CARGO'])
